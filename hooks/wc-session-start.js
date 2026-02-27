@@ -103,15 +103,41 @@ function detectStack(cwd) {
   return [...new Set(signals)];
 }
 
+// Load optional per-project configuration from wc-config.json
+function loadConfig(cwd) {
+  const configPath = path.join(cwd, "wc-config.json");
+  const defaults = {
+    visualVerification: true,
+    viewports: [375, 768, 1440],
+    darkModeCheck: true,
+    researchFirst: true,
+    versionCheck: true,
+  };
+  if (!fs.existsSync(configPath)) return defaults;
+  try {
+    const userConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    return { ...defaults, ...userConfig };
+  } catch (err) {
+    process.stderr.write(`wc-session-start: failed to parse wc-config.json — ${err.message}\n`);
+    return defaults;
+  }
+}
+
 const cwd = process.cwd();
 const stack = detectStack(cwd);
+const config = loadConfig(cwd);
+
 const stackLine = stack.length > 0
   ? `\nDetected stack: ${stack.join(", ")}. Prioritize plugins for these technologies.`
   : "";
 
+const configLine = config
+  ? `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`
+  : "";
+
 const context = `<WHYTCARD-CONSTITUTION>
 ${constitution}
-${stackLine}
+${stackLine}${configLine}
 </WHYTCARD-CONSTITUTION>`;
 
 process.stdout.write(JSON.stringify({
