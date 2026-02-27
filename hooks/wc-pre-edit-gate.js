@@ -75,10 +75,21 @@ process.stdin.on("end", () => {
   }
 
   // package.json → remind version check (if enabled)
+  // Only trigger if the edit content appears to touch dependencies
   if (config.versionCheck && filePath.endsWith("package.json")) {
-    reminders.push(
-      "WC-VERSIONS: Verify you checked the latest version of any added package via WebSearch or Context7."
-    );
+    const editContent = toolInput.new_string || toolInput.content || toolInput.insert || "";
+    const isDependencyEdit =
+      editContent.includes("dependencies") ||
+      editContent.includes("devDependencies") ||
+      editContent.includes("peerDependencies") ||
+      editContent.includes("optionalDependencies") ||
+      /["'][\w@/-]+["']\s*:\s*["']\^?~?[\d]/.test(editContent) || // matches "pkg": "^1.0.0"
+      editContent === ""; // if no content available, trigger anyway (safe default)
+    if (isDependencyEdit) {
+      reminders.push(
+        "WC-VERSIONS: Verify you checked the latest version of any added/changed package via WebSearch or Context7."
+      );
+    }
   }
 
   // Write tool (new file creation) → remind research-first (if enabled)
