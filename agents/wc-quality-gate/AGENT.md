@@ -20,7 +20,7 @@ You are the final quality gate. Your job is to verify that work meets the WhytCa
 ## Verification checklist
 
 ### 1. Research evidence
-- Were official sources consulted? (Context7 URLs, official docs)
+- Were official sources consulted? (documentation tools, official docs, verified URLs)
 - Was dual-angle research done? (good + bad perspectives)
 - Are version numbers verified against live sources (not training data)?
 

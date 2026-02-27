@@ -18,14 +18,14 @@ You are the dispatcher. Analyze the user's request and determine which skills, p
 ## Stack-aware dispatch
 
 If the session-start hook detected specific technologies, also invoke:
-- **nextjs** → Context7 for Next.js docs on any Next.js question
-- **supabase** → MCP supabase tools for any DB/auth question
+- **nextjs** → Look up Next.js docs for any Next.js question
+- **supabase** → Use Supabase MCP/tools for any DB/auth question
 - **stripe** → stripe:stripe-best-practices for any payment question
-- **tailwind** → Context7 for Tailwind docs on any styling question
+- **tailwind** → Look up Tailwind docs for any styling question
 - **playwright** → Browser tools for any testing/screenshot need
-- **vue** → Context7 for Vue docs on any Vue question
-- **svelte** → Context7 for Svelte/SvelteKit docs
-- **astro** → Context7 for Astro docs
+- **vue** → Look up Vue docs for any Vue question
+- **svelte** → Look up Svelte/SvelteKit docs
+- **astro** → Look up Astro docs
 
 ## Critical rules
 

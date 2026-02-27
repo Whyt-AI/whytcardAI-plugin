@@ -12,7 +12,7 @@ Never install or recommend a package without verifying its current state.
 ### 1. Check current version
 ```
 WebSearch: "[package-name] latest version [current year]"
-Context7: resolve-library-id("[package-name]") → get version info
+Documentation tools: look up package info and current version
 ```
 
 ### 2. Check maintenance status
