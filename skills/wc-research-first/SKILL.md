@@ -17,7 +17,7 @@ What exactly do we need to know? Frame it as a specific, answerable question.
 Run TWO searches minimum:
 
 **Good angle:**
-- Official documentation (Context7 `query-docs`)
+- Official documentation (via documentation tools or WebSearch)
 - Best practices, recommended patterns
 - Who does this well? (name specific products/companies)
 
@@ -41,10 +41,10 @@ For architectural decisions:
 
 ### 4. Verify versions live
 
-NEVER trust training data for version numbers. Always:
+NEVER trust training data for version numbers. Always use the current year in search queries:
 ```
-Context7: resolve-library-id → query-docs for current API
-WebSearch: "[library] latest version 2026"
+Documentation tools: look up current API docs for the library
+WebSearch: "[library] latest version [current year]"
 ```
 
 ### 5. Format output

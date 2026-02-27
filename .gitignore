@@ -1,6 +1,8 @@
 node_modules/
 .claude/*.local.md
 .claude/*.local.json
+.cursor/*.local.json
+wc-config.json
 *.log
 .DS_Store
 Thumbs.db

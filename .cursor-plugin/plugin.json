@@ -1,12 +1,12 @@
 {
   "name": "whytcard-ai",
+  "displayName": "WhytCard AI",
   "version": "2.0.0",
   "description": "Enforces research-first, proof-driven, UX-obsessed development through hooks, skills, rules, and routing. Works on both Cursor and Claude Code.",
   "author": {
-    "name": "Whyt-AI",
-    "url": "https://github.com/Whyt-AI"
+    "name": "Whyt-AI"
   },
-  "repository": "https://github.com/Whyt-AI/whytcardAI-plugin",
+  "keywords": ["constitution", "quality-gate", "research-first", "visual-verification", "anti-hallucination", "ux-first"],
   "license": "UNLICENSED",
-  "keywords": ["constitution", "quality-gate", "research-first", "visual-verification", "anti-hallucination", "ux-first"]
+  "repository": "https://github.com/Whyt-AI/whytcardAI-plugin"
 }

@@ -39,16 +39,14 @@ This is mandatory after ANY UI change. No exceptions.
 
 ## How to take screenshots
 
-Use Playwright MCP tools:
-```
-browser_navigate → URL
-browser_resize → {width: 375, height: 812}
-browser_take_screenshot → mobile.png
-browser_resize → {width: 768, height: 1024}
-browser_take_screenshot → tablet.png
-browser_resize → {width: 1440, height: 900}
-browser_take_screenshot → desktop.png
-```
+Use available browser/screenshot tools (Playwright, browser automation, or built-in screenshot tool):
+
+1. Navigate to the page
+2. Set viewport to 375×812 → take screenshot (mobile)
+3. Set viewport to 768×1024 → take screenshot (tablet)
+4. Set viewport to 1440×900 → take screenshot (desktop)
+
+If no browser tool is available, ask the user to verify the visual result manually.
 
 ## Escalation for visual issues
 
