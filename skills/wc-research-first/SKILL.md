@@ -41,10 +41,10 @@ For architectural decisions:
 
 ### 4. Verify versions live
 
-NEVER trust training data for version numbers. Always:
+NEVER trust training data for version numbers. Always use the current year in search queries:
 ```
 Context7: resolve-library-id → query-docs for current API
-WebSearch: "[library] latest version 2026"
+WebSearch: "[library] latest version [current year]"
 ```
 
 ### 5. Format output

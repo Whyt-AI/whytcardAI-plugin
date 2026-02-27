@@ -11,7 +11,7 @@ Never install or recommend a package without verifying its current state.
 
 ### 1. Check current version
 ```
-WebSearch: "[package-name] latest version 2026"
+WebSearch: "[package-name] latest version [current year]"
 Context7: resolve-library-id("[package-name]") → get version info
 ```
 
@@ -23,8 +23,8 @@ Context7: resolve-library-id("[package-name]") → get version info
 
 ### 3. Check alternatives
 ```
-WebSearch: "[package-name] vs alternatives 2026"
-WebSearch: "best [category] package 2026 comparison"
+WebSearch: "[package-name] vs alternatives [current year]"
+WebSearch: "best [category] package [current year] comparison"
 ```
 
 ### 4. Check bundle impact (for frontend packages)
