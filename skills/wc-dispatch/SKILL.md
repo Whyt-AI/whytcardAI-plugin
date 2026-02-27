@@ -1,5 +1,5 @@
 ---
-name: dispatch
+name: wc-dispatch
 description: Smart task router that analyzes the user's request and invokes the best combination of plugins, skills, and tools. Use at the start of any non-trivial task.
 ---
 

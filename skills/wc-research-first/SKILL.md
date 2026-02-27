@@ -1,5 +1,5 @@
 ---
-name: research-first
+name: wc-research-first
 description: Enforces dual-angle research methodology before any implementation. Use before writing code, choosing packages, or making architectural decisions.
 ---
 

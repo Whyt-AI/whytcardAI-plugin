@@ -24,12 +24,12 @@ whytcardAI-plugin/
 │   ├── pre-edit-gate.js     ← Reminds about verification before edits
 │   └── stop-verify.js       ← Checks verification was done before stopping
 ├── skills/
-│   ├── dispatch/SKILL.md    ← Smart task router
-│   ├── visual-verify/SKILL.md ← Visual verification protocol
-│   ├── research-first/SKILL.md ← Research methodology
-│   └── version-check/SKILL.md ← Package version verification
+│   ├── wc-dispatch/SKILL.md    ← Smart task router
+│   ├── wc-visual-verify/SKILL.md ← Visual verification protocol
+│   ├── wc-research-first/SKILL.md ← Research methodology
+│   └── wc-version-check/SKILL.md ← Package version verification
 └── agents/
-    └── quality-gate/AGENT.md ← Final quality gate
+    └── wc-quality-gate/AGENT.md ← Final quality gate
 ```
 
 ## Installation
@@ -65,12 +65,12 @@ The `session-start.js` hook runs at every conversation start. It:
 
 ### During Work
 - `pre-edit-gate.js` reminds about visual verification before UI edits
-- Skills are available for explicit invocation: `/dispatch`, `/visual-verify`, `/research-first`, `/version-check`
+- Skills are available for explicit invocation: `/wc-dispatch`, `/wc-visual-verify`, `/wc-research-first`, `/wc-version-check`
 - The dispatch table in the constitution guides automatic skill selection
 
 ### Before Stopping
 - `stop-verify.js` checks that critical verification steps weren't skipped
-- The `quality-gate` agent can be invoked for comprehensive final verification
+- The `wc-quality-gate` agent can be invoked for comprehensive final verification
 
 ## Works with these plugins
 

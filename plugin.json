@@ -34,12 +34,12 @@
     ]
   },
   "skills": [
-    "skills/dispatch/SKILL.md",
-    "skills/visual-verify/SKILL.md",
-    "skills/research-first/SKILL.md",
-    "skills/version-check/SKILL.md"
+    "skills/wc-dispatch/SKILL.md",
+    "skills/wc-visual-verify/SKILL.md",
+    "skills/wc-research-first/SKILL.md",
+    "skills/wc-version-check/SKILL.md"
   ],
   "agents": [
-    "agents/quality-gate/AGENT.md"
+    "agents/wc-quality-gate/AGENT.md"
   ]
 }

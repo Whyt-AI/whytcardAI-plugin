@@ -1,5 +1,5 @@
 ---
-name: visual-verify
+name: wc-visual-verify
 description: Mandatory visual verification for any UI change. Takes screenshots at 3 viewports, evaluates design quality, checks dark/light modes. Use after ANY UI modification.
 ---
 

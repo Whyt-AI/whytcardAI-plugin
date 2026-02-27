@@ -1,5 +1,5 @@
 ---
-name: version-check
+name: wc-version-check
 description: Verify current versions of any package or library before installing or recommending. Use before any npm install, pip install, or technology recommendation.
 ---
 

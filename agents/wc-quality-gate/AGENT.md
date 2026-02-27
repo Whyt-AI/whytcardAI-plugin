@@ -1,5 +1,5 @@
 ---
-name: quality-gate
+name: wc-quality-gate
 description: Final quality gate agent. Runs comprehensive verification before declaring any work complete. Checks visual proof, version correctness, research evidence, and code quality.
 tools:
   - Read
