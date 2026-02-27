@@ -1,0 +1,54 @@
+---
+description: "Visual verification protocol — mandatory after any UI file change"
+globs:
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.vue"
+  - "**/*.svelte"
+  - "**/*.astro"
+  - "**/*.css"
+  - "**/*.scss"
+  - "**/*.sass"
+  - "**/*.less"
+  - "**/*.module.css"
+  - "**/*.module.scss"
+  - "**/*.html"
+---
+
+# Visual Verification Protocol
+
+This file is being edited — visual verification is MANDATORY.
+
+## After completing this edit:
+
+1. **Screenshots at 3 viewports**
+   - Mobile: 375px width
+   - Tablet: 768px width
+   - Desktop: 1440px width
+
+2. **Check both modes** (if applicable)
+   - Light mode
+   - Dark mode
+
+3. **Evaluate as a user**
+   - Visual hierarchy clear? (most important = most visible)
+   - Typography hierarchy respected? (h1 > h2 > h3 > body)
+   - Spacings consistent and balanced?
+   - Contrast sufficient? (AA minimum: 4.5:1 for text)
+   - Professional and polished?
+
+4. **Check for issues**
+   - No horizontal overflow on mobile
+   - No text truncation hiding meaning
+   - No broken layouts at any viewport
+   - Focus indicators visible on interactive elements
+   - Animations respect prefers-reduced-motion
+
+5. **Verdict**: READY (all pass) or NOT READY (list issues with file:line)
+
+## Fix escalation order
+1. Adjust value (size, color, spacing)
+2. Change utility class
+3. Override with more specific selector
+4. Inspect computed styles
+5. Restructure component (last resort)
