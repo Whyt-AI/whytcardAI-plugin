@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/wc-session-start.js"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/wc-prompt-dispatch.js"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/wc-pre-edit-gate.js",
+        "matcher": "Edit|Write|NotebookEdit"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/wc-post-edit-verify.js",
+        "matcher": "Edit|Write|NotebookEdit"
+      }
+    ],
+    "stop": [
+      {
+        "command": "echo '{}'"
+      }
+    ]
+  }
+}

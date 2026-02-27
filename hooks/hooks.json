@@ -1,5 +1,5 @@
 {
-  "description": "WhytCard AI Constitution hooks — injects principles at session start, reminds verification before edits, validates completeness before stopping",
+  "description": "WhytCard AI Constitution hooks — works on both Claude Code and Cursor. Injects principles, reminds verification, validates completeness.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-session-start.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}}\"/hooks/wc-session-start.js",
             "timeout": 10
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-prompt-dispatch.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}}\"/hooks/wc-prompt-dispatch.js",
             "timeout": 5
           }
         ]
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-pre-edit-gate.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}}\"/hooks/wc-pre-edit-gate.js",
             "timeout": 5
           }
         ]
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-post-edit-verify.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}}\"/hooks/wc-post-edit-verify.js",
             "timeout": 5
           }
         ]
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the WhytCard Constitution was followed:\n\n1. VISUAL: If any visual files were edited (.tsx, .jsx, .vue, .svelte, .css, .scss, .html, .astro), were Playwright screenshots taken at 3 viewports (375/768/1440px)? If not, return 'deny' with reason.\n2. VERSIONS: If any packages were installed (npm/pnpm/bun add), were their versions verified via WebSearch or Context7? If not, return 'deny' with reason.\n3. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad)? If not, return 'deny' with reason.\n4. PROOF: Were any claims made without evidence (screenshots, URLs, test results)? If so, return 'deny' with reason.\n\nIf all checks pass or no code/UI work was done, return 'allow'.",
+            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the WhytCard Constitution was followed:\n\n1. VISUAL: If any visual files were edited (.tsx, .jsx, .vue, .svelte, .css, .scss, .html, .astro), were screenshots taken at 3 viewports (375/768/1440px)? If not, return 'deny' with reason.\n2. VERSIONS: If any packages were installed or updated, were their versions verified via WebSearch? If not, return 'deny' with reason.\n3. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad)? If not, return 'deny' with reason.\n4. PROOF: Were any claims made without evidence (screenshots, URLs, test results)? If so, return 'deny' with reason.\n\nIf all checks pass or no code/UI work was done, return 'allow'.",
             "timeout": 30
           }
         ]
