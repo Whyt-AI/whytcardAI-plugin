@@ -2,20 +2,21 @@
 /**
  * SessionStart hook — WhytCard AI Constitution
  *
- * Injects the agent's operating principles and plugin routing table
- * into every Claude Code conversation via hookSpecificOutput.additionalContext.
+ * Injects the agent's operating principles into every conversation.
+ * Works on both Claude Code and Cursor via shared output module.
  *
- * Output format (Claude Code SessionStart protocol):
- *   { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "..." } }
+ * Loads only core principles at session start. The dispatch table
+ * is loaded on-demand via the wc-dispatch skill.
  */
 
 const fs = require("fs");
 const path = require("path");
+const { injectContext, loadConfig, getPluginRoot } = require("./lib/output");
 
-// Load the constitution from the markdown file
-// Only inject core principles at session start (before CORE_PRINCIPLES_END marker).
-// The dispatch table is loaded on-demand via the wc-dispatch skill.
-const constitutionPath = path.join(__dirname, "..", "constitution.md");
+// ─── Load constitution ──────────────────────────────────────────────────
+
+const pluginRoot = getPluginRoot();
+const constitutionPath = path.join(pluginRoot, "constitution.md");
 let constitution = "";
 try {
   const full = fs.readFileSync(constitutionPath, "utf8");
@@ -27,7 +28,8 @@ try {
   process.stderr.write(`wc-session-start: failed to load constitution — ${err.message}\n`);
 }
 
-// Detect project stack from package.json, requirements.txt, etc.
+// ─── Detect project stack ───────────────────────────────────────────────
+
 function detectStack(cwd) {
   const signals = [];
 
@@ -55,8 +57,7 @@ function detectStack(cwd) {
   }
 
   // Python
-  const pyFiles = ["requirements.txt", "pyproject.toml", "setup.py"];
-  for (const pyFile of pyFiles) {
+  for (const pyFile of ["requirements.txt", "pyproject.toml", "setup.py"]) {
     const pyPath = path.join(cwd, pyFile);
     if (fs.existsSync(pyPath)) {
       try {
@@ -69,18 +70,14 @@ function detectStack(cwd) {
     }
   }
 
-  // Rust
+  // Other languages
   if (fs.existsSync(path.join(cwd, "Cargo.toml"))) signals.push("rust");
-
-  // Go
   if (fs.existsSync(path.join(cwd, "go.mod"))) signals.push("go");
-
-  // Docker
   if (fs.existsSync(path.join(cwd, "Dockerfile")) || fs.existsSync(path.join(cwd, "docker-compose.yml"))) {
     signals.push("docker");
   }
 
-  // Monorepo: scan one level of subdirectories for package.json
+  // Monorepo: scan one level of subdirectories
   try {
     const entries = fs.readdirSync(cwd, { withFileTypes: true });
     for (const entry of entries) {
@@ -90,59 +87,33 @@ function detectStack(cwd) {
           try {
             const pkg = JSON.parse(fs.readFileSync(subPkg, "utf8"));
             const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
-            if (allDeps["next"] && !signals.includes("nextjs")) signals.push("nextjs");
-            if (allDeps["react"] && !signals.includes("react")) signals.push("react");
-            if (allDeps["vue"] && !signals.includes("vue")) signals.push("vue");
+            if (allDeps["next"]) signals.push("nextjs");
+            if (allDeps["react"]) signals.push("react");
+            if (allDeps["vue"]) signals.push("vue");
           } catch { /* ignore */ }
         }
       }
     }
   } catch { /* ignore */ }
 
-  // Deduplicate
   return [...new Set(signals)];
 }
 
-// Load optional per-project configuration from wc-config.json
-function loadConfig(cwd) {
-  const configPath = path.join(cwd, "wc-config.json");
-  const defaults = {
-    visualVerification: true,
-    viewports: [375, 768, 1440],
-    darkModeCheck: true,
-    researchFirst: true,
-    versionCheck: true,
-  };
-  if (!fs.existsSync(configPath)) return defaults;
-  try {
-    const userConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    return { ...defaults, ...userConfig };
-  } catch (err) {
-    process.stderr.write(`wc-session-start: failed to parse wc-config.json — ${err.message}\n`);
-    return defaults;
-  }
-}
+// ─── Build context and output ───────────────────────────────────────────
 
 const cwd = process.cwd();
 const stack = detectStack(cwd);
 const config = loadConfig(cwd);
 
 const stackLine = stack.length > 0
-  ? `\nDetected stack: ${stack.join(", ")}. Prioritize plugins for these technologies.`
+  ? `\nDetected stack: ${stack.join(", ")}. Prioritize tools and patterns for these technologies.`
   : "";
 
-const configLine = config
-  ? `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`
-  : "";
+const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
 
 const context = `<WHYTCARD-CONSTITUTION>
 ${constitution}
 ${stackLine}${configLine}
 </WHYTCARD-CONSTITUTION>`;
 
-process.stdout.write(JSON.stringify({
-  hookSpecificOutput: {
-    hookEventName: "SessionStart",
-    additionalContext: context
-  }
-}));
+process.stdout.write(injectContext("SessionStart", context));

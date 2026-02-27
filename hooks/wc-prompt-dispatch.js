@@ -1,22 +1,18 @@
 #!/usr/bin/env node
 /**
- * wc-prompt-dispatch — UserPromptSubmit hook
+ * wc-prompt-dispatch — UserPromptSubmit / beforeSubmitPrompt hook
  *
- * Analyzes the user's prompt and injects dispatch hints into Claude's context
- * so it knows which skills/tools to invoke before starting work.
- *
- * Input format (via stdin JSON):
- *   { prompt, session_id, cwd }
- *
- * Output format (Claude Code UserPromptSubmit protocol):
- *   { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "..." } }
+ * Analyzes the user's prompt keywords and injects dispatch hints
+ * so the AI agent knows which skills/tools to invoke before starting work.
+ * Works on both Claude Code and Cursor via shared output module.
  */
 
+const { handleStdin, injectContext, emptyResponse } = require("./lib/output");
+
 // Keyword → dispatch hint mapping
-// Each entry: [keywords (regex), dispatch hint]
 const DISPATCH_RULES = [
   [/\b(ui|component|page|visual|design|layout|style|theme)\b/i,
-    "WC-DISPATCH: UI task detected → invoke wc-visual-verify skill after changes. Take Playwright screenshots at 3 viewports."],
+    "WC-DISPATCH: UI task detected → invoke wc-visual-verify skill after changes. Take screenshots at 3 viewports."],
   [/\b(research|compare|evaluate|which|best|alternative|recommend|pros.?cons|trade.?off)\b/i,
     "WC-DISPATCH: Research task detected → invoke wc-research-first skill. Dual-angle research required (good + bad)."],
   [/\b(install|add|package|dependency|npm|pnpm|bun|pip)\b/i,
@@ -33,22 +29,11 @@ const DISPATCH_RULES = [
     "WC-DISPATCH: i18n task detected → verify all required locale files exist and contain new keys."],
   [/\b(accessib\w*|a11y|wcag|screen.?reader|aria|focus)\b/i,
     "WC-DISPATCH: Accessibility task detected → verify semantic HTML, ARIA, keyboard nav, contrast AA, prefers-reduced-motion."],
-  [/\b(plan|spec|design|architect|rfc)\b/i,
+  [/\b(plan|spec|architect|rfc)\b/i,
     "WC-DISPATCH: Planning task detected → write structured plan: goals, constraints, approach, risks, steps."],
 ];
 
-let input = "";
-process.stdin.setEncoding("utf8");
-process.stdin.on("data", (c) => (input += c));
-process.stdin.on("end", () => {
-  let data;
-  try {
-    data = JSON.parse(input);
-  } catch {
-    process.stdout.write(JSON.stringify({}));
-    return;
-  }
-
+handleStdin((data) => {
   const prompt = data.prompt || "";
   const hints = [];
 
@@ -59,13 +44,7 @@ process.stdin.on("end", () => {
   }
 
   if (hints.length > 0) {
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "UserPromptSubmit",
-        additionalContext: hints.join("\n")
-      }
-    }));
-  } else {
-    process.stdout.write(JSON.stringify({}));
+    return injectContext("UserPromptSubmit", hints.join("\n"));
   }
+  return emptyResponse();
 });
