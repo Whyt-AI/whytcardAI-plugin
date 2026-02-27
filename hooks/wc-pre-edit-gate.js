@@ -3,11 +3,32 @@
  * wc-pre-edit-gate — PreToolUse hook for Edit/Write/NotebookEdit
  *
  * Reads tool_input from stdin (Claude Code hook protocol).
- * Injects reminders into conversation context. Does NOT block.
+ * Injects reminders into Claude's context via hookSpecificOutput.additionalContext.
+ * Does NOT block tool execution.
  *
  * Input format (via stdin JSON):
  *   { tool_name, tool_input: { file_path, ... }, session_id, cwd }
+ *
+ * Output format (Claude Code PreToolUse protocol):
+ *   { hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: "..." } }
  */
+
+// File extensions that affect visual output and require screenshot verification
+const VISUAL_EXTENSIONS = [
+  ".tsx", ".jsx",                          // React components
+  ".vue", ".svelte", ".astro",             // Other UI frameworks
+  ".css", ".scss", ".sass", ".less",       // Stylesheets
+  ".module.css", ".module.scss",           // CSS modules
+  ".html",                                 // HTML templates
+];
+
+/**
+ * Check if a file path represents a visual/UI file.
+ * Uses endsWith for each extension to handle compound extensions like .module.css.
+ */
+function isVisualFile(filePath) {
+  return VISUAL_EXTENSIONS.some((ext) => filePath.endsWith(ext));
+}
 
 let input = "";
 process.stdin.setEncoding("utf8");
@@ -26,10 +47,10 @@ process.stdin.on("end", () => {
   const filePath = (toolInput.file_path || "").toLowerCase();
   const reminders = [];
 
-  // UI file → remind visual verification
-  if (filePath.endsWith(".tsx") || filePath.endsWith(".jsx")) {
+  // Visual/UI file → remind visual verification
+  if (isVisualFile(filePath)) {
     reminders.push(
-      "WC-VISUAL: After this edit, take Playwright screenshots at 3 viewports (375/768/1440px) to verify the result."
+      "WC-VISUAL: After this edit, take Playwright screenshots at 3 viewports (375/768/1440px) to verify the result visually."
     );
   }
 
@@ -49,7 +70,10 @@ process.stdin.on("end", () => {
 
   if (reminders.length > 0) {
     process.stdout.write(JSON.stringify({
-      systemMessage: reminders.join("\n")
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        additionalContext: reminders.join("\n")
+      }
     }));
   } else {
     process.stdout.write(JSON.stringify({}));
