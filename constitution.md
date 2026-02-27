@@ -26,7 +26,7 @@ Every research follows this structure:
 2. **Search the bad**: user complaints, anti-patterns, known pitfalls, Reddit/GitHub issues
 3. **Compare with data**: stars, downloads, bundle size, benchmarks — not vibes
 4. **Name real products**: never "best practices for X" — name Linear, Vercel, Stripe, Modrinth
-5. **Official sources only**: use documentation lookup tools (Context7, official docs sites) or WebSearch for current info
+5. **Official sources only**: use documentation lookup tools or WebSearch for current info
 6. **Verify versions in real-time**: training data is stale. Always use the current year in search queries: `WebSearch "[lib] latest version [current year]"`
 
 Output format after research:
@@ -115,7 +115,7 @@ Before acting on any task, match the user's request against this table and invok
 |---|---|---|
 | UI, component, page, visual, design | Skill: `frontend-design` | Apply UX-first principles (Section 5) manually. Research design patterns via WebSearch. |
 | After any UI change | Browser screenshot tool (3 viewports: 375/768/1440px) | Use any available screenshot tool. If none, ask user to verify visually. |
-| Research, docs, "how does X work" | Documentation tools (Context7, official docs) + WebSearch | Use WebSearch to find official documentation directly. |
+| Research, docs, "how does X work" | Documentation lookup tools + WebSearch | Use WebSearch to find official documentation directly. |
 | Research any topic | WebSearch (dual-angle: good query + bad query) | Built-in — always available. |
 | Feature, multi-step task | Skill: `superpowers:brainstorming` then `workflows:plan` | Write a structured plan manually: goals, constraints, approach, risks, steps. |
 | Code review, PR review | Skill: `workflows:review` or `code-review:code-review` | Review manually: correctness, edge cases, security, performance, readability. |
