@@ -1,0 +1,41 @@
+{
+  "description": "WhytCard AI Constitution hooks — injects principles at session start, reminds verification before edits, validates completeness before stopping",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-session-start.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PLUGIN_ROOT/hooks/wc-pre-edit-gate.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before stopping, verify the WhytCard Constitution was followed:\n\n1. VISUAL: If any .tsx/.jsx files were edited, were Playwright screenshots taken at 3 viewports (375/768/1440px)? If not, return 'block' with reason.\n2. VERSIONS: If any packages were installed (npm/pnpm/bun add), were their versions verified via WebSearch or Context7? If not, return 'block' with reason.\n3. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad)? If not, return 'block' with reason.\n4. PROOF: Were any claims made without evidence (screenshots, URLs, test results)? If so, return 'block' with reason.\n\nIf all checks pass or no code/UI work was done, return 'approve'.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

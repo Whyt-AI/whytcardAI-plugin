@@ -68,18 +68,6 @@ ${constitution}
 ${stackLine}
 </WHYTCARD-CONSTITUTION>`;
 
-// Escape for JSON
-function escapeForJson(s) {
-  return s
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r")
-    .replace(/\t/g, "\\t");
-}
-
-const escaped = escapeForJson(context);
-
 process.stdout.write(JSON.stringify({
   additional_context: context,
   hookSpecificOutput: {

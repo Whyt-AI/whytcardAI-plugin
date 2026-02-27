@@ -1,0 +1,12 @@
+{
+  "name": "whytcardAI-plugin",
+  "version": "1.1.0",
+  "description": "WhytCard AI agent constitution — enforces research-first, proof-driven, UX-obsessed development through hooks, skills, and routing rules",
+  "author": {
+    "name": "Whyt-AI",
+    "url": "https://github.com/Whyt-AI"
+  },
+  "repository": "https://github.com/Whyt-AI/whytcardAI-plugin",
+  "license": "UNLICENSED",
+  "keywords": ["constitution", "quality-gate", "research-first", "visual-verification", "anti-hallucination"]
+}

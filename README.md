@@ -17,12 +17,13 @@ This plugin turns Claude Code from a code assistant into a disciplined co-founde
 
 ```
 whytcardAI-plugin/
-├── plugin.json              ← Plugin manifest (hooks, skills, agents)
-├── constitution.md          ← Core principles + dispatch table
+├── .claude-plugin/
+│   └── plugin.json              ← Plugin manifest
+├── constitution.md              ← Core principles + dispatch table
 ├── hooks/
-│   ├── session-start.js     ← Injects constitution at conversation start
-│   ├── pre-edit-gate.js     ← Reminds about verification before edits
-│   └── stop-verify.js       ← Checks verification was done before stopping
+│   ├── hooks.json               ← Hook event configuration
+│   ├── wc-session-start.js      ← Injects constitution at conversation start
+│   └── wc-pre-edit-gate.js      ← Reminds about verification before edits
 ├── skills/
 │   ├── wc-dispatch/SKILL.md    ← Smart task router
 │   ├── wc-visual-verify/SKILL.md ← Visual verification protocol
@@ -58,18 +59,18 @@ Or add to `~/.claude/settings.json`:
 ## How it works
 
 ### Session Start
-The `session-start.js` hook runs at every conversation start. It:
+`wc-session-start.js` runs at every conversation start. It:
 1. Loads `constitution.md` (principles + dispatch table)
 2. Detects the project's tech stack from `package.json` / `requirements.txt`
 3. Injects everything into the conversation context
 
 ### During Work
-- `pre-edit-gate.js` reminds about visual verification before UI edits
+- `wc-pre-edit-gate.js` reminds about visual verification before UI edits (.tsx/.jsx)
 - Skills are available for explicit invocation: `/wc-dispatch`, `/wc-visual-verify`, `/wc-research-first`, `/wc-version-check`
 - The dispatch table in the constitution guides automatic skill selection
 
 ### Before Stopping
-- `stop-verify.js` checks that critical verification steps weren't skipped
+- A **prompt-based Stop hook** (in `hooks.json`) verifies that visual checks, version checks, and research were done
 - The `wc-quality-gate` agent can be invoked for comprehensive final verification
 
 ## Works with these plugins
