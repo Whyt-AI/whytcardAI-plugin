@@ -10,7 +10,7 @@ You are the dispatcher. Analyze the user's request and determine which skills, p
 ## Process
 
 1. **Parse the request** — what is the user asking? What category does it fall into?
-2. **Check the constitution's dispatch table** — it was injected at session start inside `<WHYTCARD-CONSTITUTION>`. Match the user's request against every row. Multiple matches = invoke all of them.
+2. **Load the dispatch table** — read `constitution.md` from the plugin root. The dispatch table is in the section after the `CORE_PRINCIPLES_END` marker. Match the user's request against every row. Multiple matches = invoke all of them.
 3. **Check detected stack** — the session start hook detected the project's tech stack. Use stack-specific tools when relevant.
 4. **Check fallbacks** — if a dispatched plugin is not installed, use the fallback action from the dispatch table's third column. Never invoke a skill that doesn't exist.
 5. **Report what you invoked** — tell the user which tools you're using and why.

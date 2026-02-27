@@ -13,10 +13,15 @@ const fs = require("fs");
 const path = require("path");
 
 // Load the constitution from the markdown file
+// Only inject core principles at session start (before CORE_PRINCIPLES_END marker).
+// The dispatch table is loaded on-demand via the wc-dispatch skill.
 const constitutionPath = path.join(__dirname, "..", "constitution.md");
 let constitution = "";
 try {
-  constitution = fs.readFileSync(constitutionPath, "utf8");
+  const full = fs.readFileSync(constitutionPath, "utf8");
+  const marker = "<!-- CORE_PRINCIPLES_END";
+  const markerIndex = full.indexOf(marker);
+  constitution = markerIndex !== -1 ? full.substring(0, markerIndex).trim() : full;
 } catch (err) {
   constitution = "ERROR: Could not load constitution.md — " + err.message;
   process.stderr.write(`wc-session-start: failed to load constitution — ${err.message}\n`);

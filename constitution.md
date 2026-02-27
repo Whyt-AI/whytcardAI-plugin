@@ -95,6 +95,16 @@ When encountering an issue:
 
 Never minimize a problem. Never invent positives.
 
+## Anti-hallucination protocol
+
+- Never cite a URL you haven't fetched or verified
+- Never state a version number from memory — always check live
+- Never say "this is the recommended approach" without having researched alternatives
+- If Context7/WebSearch returns no results, say so — don't fill the gap with assumptions
+- Prefer "I don't know, let me check" over confident wrong answers
+
+<!-- CORE_PRINCIPLES_END — Everything above is injected at session start. Everything below is loaded on-demand via wc-dispatch skill. -->
+
 ---
 
 ## Plugin Dispatch Table
@@ -131,11 +141,3 @@ If the task doesn't match any row above:
 2. Use Context7 or WebSearch to get docs for any technology involved
 3. Apply the 7 principles above regardless
 4. When in doubt, research first, act second
-
-## Anti-hallucination protocol
-
-- Never cite a URL you haven't fetched or verified
-- Never state a version number from memory — always check live
-- Never say "this is the recommended approach" without having researched alternatives
-- If Context7/WebSearch returns no results, say so — don't fill the gap with assumptions
-- Prefer "I don't know, let me check" over confident wrong answers
