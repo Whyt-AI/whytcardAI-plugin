@@ -23,6 +23,38 @@ Check if `.whytcard/` already exists in the project root.
 - If it exists: read `.whytcard/index.md` and report current state. If something looks inconsistent, propose a fix (do not delete anything unless the user explicitly asks for a reset).
 - If it does not exist: proceed to creation.
 
+### 1b) Decide storage mode (LOCAL vs GLOBAL)
+
+Goal: the user should not have to repeat setup across projects/sessions.
+
+If this is the first WhytCard setup on this machine, ask the user ONCE:
+- **GLOBAL** (recommended): store project knowledge outside repos (no clutter)
+- **LOCAL**: store `.whytcard/` inside each repo (current behavior)
+
+If the user doesn't care, default to **GLOBAL**.
+
+If GLOBAL, also ask where the global root should live (default: `~/.whytcard`).
+
+Persist the choice in a global config file so future projects are auto-configured by the SessionStart onboarding:
+- `{globalRoot}/config.json` (dynamic path, no hardcoded values)
+
+### 1c) GLOBAL mode project layout (if chosen)
+
+For a project, create:
+`{globalRoot}/projects/{projectSlug}-{projectId}/`
+- `docs/brainstorms/`
+- `docs/plans/`
+- `docs/research/`
+- `docs/logs/`
+- `docs/reviews/`
+- `docs/stacks/`
+- `instructions/`
+- `meta.json` (repo path, projectId, createdAt, detected stack)
+
+Then attach the repo to this global directory:
+- Prefer symlink: `.whytcard -> {globalProjectDir}`
+- If symlink fails: fall back to LOCAL `.whytcard/` to keep the plugin functional.
+
 ### 2) Detect project context (best effort)
 
 Gather:
@@ -44,7 +76,7 @@ Gather:
 └── context/              ← Session summaries + decision log
 ```
 
-Create subdirectories on first use (minimal upfront creation is fine), but ensure `index.md` is created now.
+Create subdirectories on first use (minimal upfront creation is fine), but ensure `index.md` is created now (in the chosen KB location).
 
 ### 4) Generate `.whytcard/index.md`
 

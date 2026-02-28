@@ -12,6 +12,13 @@
 const fs = require("fs");
 const path = require("path");
 const { injectContext, loadConfig, getPluginRoot } = require("./lib/output");
+const {
+  getDefaultGlobalRoot,
+  getGlobalConfigPath,
+  loadGlobalKbConfig,
+  getGlobalProjectDir,
+  hasLocalWhytcard,
+} = require("./lib/whytcard-kb");
 
 // ─── Load constitution ──────────────────────────────────────────────────
 
@@ -111,9 +118,74 @@ const stackLine = stack.length > 0
 
 const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
 
+// ─── Optional onboarding (auto, no commands) ───────────────────────────
+
+function buildOnboardingContext(cwdPath) {
+  // If the project already has a .whytcard folder (local or symlink), don't nag.
+  if (hasLocalWhytcard(cwdPath)) return "";
+
+  const globalRoot = getDefaultGlobalRoot();
+  const globalCfgPath = getGlobalConfigPath(globalRoot);
+  const globalCfg = loadGlobalKbConfig(globalRoot);
+  const globalProjectDir = getGlobalProjectDir(globalRoot, cwdPath);
+
+  // Keep this short: it's injected in every SessionStart.
+  // It must be actionable, and it must not require the user to memorize commands.
+  if (!globalCfg) {
+    return `
+
+<WC-ONBOARDING>
+This project has no WhytCard knowledge base yet.
+
+Default recommendation: use a GLOBAL knowledge base (no clutter in repos).
+
+Ask the user ONCE:
+1) Knowledge base mode: GLOBAL (recommended) or LOCAL
+2) If GLOBAL: where should the global root live? (default: ${globalRoot})
+
+Then configure automatically:
+- Create the global structure at {globalRoot}/projects/{projectSlug}-{projectId}/:
+  - docs/{brainstorms,plans,research,logs,reviews,stacks}/
+  - instructions/
+  - meta.json (repo path, projectId, createdAt, stack)
+- Create a .whytcard entry in the repo:
+  - Prefer a symlink: .whytcard -> ${globalProjectDir}
+  - If symlink fails: fall back to LOCAL .whytcard (keep plugin functional)
+- Persist the choice so future sessions don't ask again:
+  - write ${globalCfgPath} with { mode, globalRoot, projects[...] } (dynamic values, no hardcoded paths)
+
+Goal: after this onboarding, the user should never have to repeat setup per project/session.
+</WC-ONBOARDING>`;
+  }
+
+  // Config exists. If mode is global, guide the agent to attach this project automatically.
+  const mode = globalCfg.mode || globalCfg.kbMode || "global";
+  if (String(mode).toLowerCase() === "global") {
+    return `
+
+<WC-ONBOARDING>
+WhytCard global knowledge base detected.
+If this project has no .whytcard yet, attach it automatically:
+- Ensure global project dir exists: ${globalProjectDir}
+- Create symlink: .whytcard -> ${globalProjectDir}
+- If symlink fails: fall back to LOCAL .whytcard to keep the plugin working.
+</WC-ONBOARDING>`;
+  }
+
+  // Local mode: remind to create .whytcard in-repo.
+  return `
+
+<WC-ONBOARDING>
+WhytCard config is set to LOCAL mode. This project has no .whytcard yet.
+Create .whytcard/ in the repo and initialize index.md (same structure as usual).
+</WC-ONBOARDING>`;
+}
+
+const onboarding = buildOnboardingContext(cwd);
+
 const context = `<WHYTCARD-CONSTITUTION>
 ${constitution}
 ${stackLine}${configLine}
 </WHYTCARD-CONSTITUTION>`;
 
-process.stdout.write(injectContext("SessionStart", context));
+process.stdout.write(injectContext("SessionStart", context + onboarding));
