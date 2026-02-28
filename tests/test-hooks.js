@@ -43,13 +43,18 @@ function runHook(hookFile, stdinData) {
     input,
     encoding: "utf8",
     timeout: 10000,
+    env: { ...process.env, WHYTCARD_DISABLE_AUTO_SETUP: "1" },
   });
   return JSON.parse(result.trim() || "{}");
 }
 
 function runSessionStart() {
   const hookPath = path.join(HOOKS_DIR, "wc-session-start.js");
-  const result = execFileSync("node", [hookPath], { encoding: "utf8", timeout: 10000 });
+  const result = execFileSync("node", [hookPath], {
+    encoding: "utf8",
+    timeout: 10000,
+    env: { ...process.env, WHYTCARD_DISABLE_AUTO_SETUP: "1" },
+  });
   return JSON.parse(result.trim());
 }
 
@@ -491,6 +496,7 @@ const requiredFiles = [
   ".cursor/hooks.json",
   "hooks/hooks.json",
   "hooks/lib/output.js",
+  "hooks/lib/whytcard-kb.js",
   "hooks/wc-session-start.js",
   "hooks/wc-pre-edit-gate.js",
   "hooks/wc-post-edit-verify.js",

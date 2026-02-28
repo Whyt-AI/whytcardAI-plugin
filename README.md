@@ -143,7 +143,14 @@ Every project gets a `.whytcard/` directory that stores all context:
 └── context/       ← Session summaries, decision log
 ```
 
-Run `/wc-1_setup` (Cursor) or `/setup` (Claude Code) to initialize — any pipeline command will auto-create it if missing.
+**Setup-friendly behavior (no commands):** on first chat in a repo with no `.whytcard/`, WhytCard auto-onboards and asks **once**:
+- KB mode: **GLOBAL** (recommended) or **LOCAL**
+- If GLOBAL: where the global root should live (default: `~/.whytcard`)
+
+Then it creates the structure and (in GLOBAL mode) links the repo with a directory link:
+`.whytcard -> {globalRoot}/projects/{projectSlug}-{projectId}/docs`
+
+You can still run `/wc-1_setup` (Cursor) or `/setup` (Claude Code) manually, but it should not be required.
 
 ## Installation
 
@@ -200,11 +207,20 @@ Create an optional `wc-config.json` in your project root:
   "viewports": [375, 768, 1440],
   "darkModeCheck": true,
   "researchFirst": true,
-  "versionCheck": true
+  "versionCheck": true,
+
+  "autoSetup": true,
+  "kbMode": null,
+  "globalRoot": null
 }
 ```
 
 All options default to `true`. Set `false` to disable specific checks.
+
+KB options:
+- `autoSetup`: auto-initialize `.whytcard/` when missing (recommended)
+- `kbMode`: `"global"` or `"local"` to override machine default for this repo
+- `globalRoot`: override the GLOBAL KB root path for this repo
 
 ## Slash Commands
 

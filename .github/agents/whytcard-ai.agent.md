@@ -83,6 +83,25 @@ All project documentation lives in `.whytcard/`:
 
 Always check `.whytcard/index.md` first to understand current project state.
 
+### Auto-onboarding (no commands)
+
+If `.whytcard/` is missing, you MUST onboard automatically (do **not** ask the user to run `/wc-*` commands):
+
+1. Ask the user ONCE (default = GLOBAL):
+   - KB mode: GLOBAL (recommended) or LOCAL
+   - If GLOBAL: where should the global root live? (default: `~/.whytcard`)
+2. Create the KB:
+   - GLOBAL:
+     - `{globalRoot}/projects/{projectSlug}-{projectId}/docs/{brainstorms,plans,research,logs,reviews,stacks,context,etc,instructions}/`
+     - `{globalRoot}/projects/{projectSlug}-{projectId}/instructions/`
+     - `{globalRoot}/projects/{projectSlug}-{projectId}/meta.json`
+     - Link in repo: `.whytcard -> {globalProjectDir}/docs` (symlink/junction). If linking fails: fall back to LOCAL.
+   - LOCAL:
+     - `.whytcard/{brainstorms,plans,research,logs,reviews,stacks,context,etc,instructions}/` + `.whytcard/index.md`
+3. Persist choice:
+   - `~/.whytcard/locator.json` with `{ globalRoot }`
+   - `{globalRoot}/config.json` with `{ version, kbMode, globalRoot, confirmed:true }`
+
 ## Task Dispatch
 
 Match the task and use the appropriate protocol:

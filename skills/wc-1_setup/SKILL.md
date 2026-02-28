@@ -36,7 +36,8 @@ If the user doesn't care, default to **GLOBAL**.
 If GLOBAL, also ask where the global root should live (default: `~/.whytcard`).
 
 Persist the choice in a global config file so future projects are auto-configured by the SessionStart onboarding:
-- `{globalRoot}/config.json` (dynamic path, no hardcoded values)
+- Write `{globalRoot}/config.json` with `{ version, kbMode, globalRoot, confirmed:true }`
+- Write `~/.whytcard/locator.json` with `{ globalRoot }` so future sessions can find the chosen root automatically
 
 ### 1c) GLOBAL mode project layout (if chosen)
 
@@ -48,11 +49,14 @@ For a project, create:
 - `docs/logs/`
 - `docs/reviews/`
 - `docs/stacks/`
+- `docs/context/`
+- `docs/etc/`
+- `docs/instructions/`
 - `instructions/`
 - `meta.json` (repo path, projectId, createdAt, detected stack)
 
 Then attach the repo to this global directory:
-- Prefer symlink: `.whytcard -> {globalProjectDir}`
+- Prefer directory link: `.whytcard -> {globalProjectDir}/docs` (junction on Windows, symlink elsewhere)
 - If symlink fails: fall back to LOCAL `.whytcard/` to keep the plugin functional.
 
 ### 2) Detect project context (best effort)
@@ -73,7 +77,10 @@ Gather:
 ├── logs/                 ← Execution logs
 ├── reviews/              ← Review outputs
 ├── research/             ← Research findings
-└── context/              ← Session summaries + decision log
+├── context/              ← Session summaries + decision log
+├── stacks/               ← Stack/version snapshots
+├── etc/                  ← Misc project notes
+└── instructions/         ← Project-specific operating instructions
 ```
 
 Create subdirectories on first use (minimal upfront creation is fine), but ensure `index.md` is created now (in the chosen KB location).

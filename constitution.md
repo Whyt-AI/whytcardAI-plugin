@@ -108,7 +108,11 @@ Never minimize a problem. Never invent positives.
 All project documentation, brainstorms, plans, logs, reviews, and research live in `.whytcard/` at the project root. This is the canonical output directory for every command.
 
 **On every task start:**
-1. Check if `.whytcard/` exists. If not, initialize it (wc-1_setup).
+1. Check if `.whytcard/` exists. If not, **onboard automatically (no slash commands)**:
+   - Ask the user ONCE: KB mode = GLOBAL (recommended) or LOCAL
+   - If GLOBAL: ask where the global root lives (default: `~/.whytcard`)
+   - Create the KB and attach the repo: `.whytcard -> {globalProjectDir}/docs` (symlink/junction), fallback LOCAL if linking fails
+   - Persist choice so future projects auto-configure (config + locator)
 2. Read `.whytcard/index.md` to understand current project state.
 3. Check `.whytcard/research/` for existing findings before researching from scratch.
 

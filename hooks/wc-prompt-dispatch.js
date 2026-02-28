@@ -7,7 +7,18 @@
  * Works on both Claude Code and Cursor via shared output module.
  */
 
-const { handleStdin, injectContext, emptyResponse } = require("./lib/output");
+const fs = require("fs");
+const path = require("path");
+const { handleStdin, injectContext, emptyResponse, loadConfig } = require("./lib/output");
+const {
+  getDefaultGlobalRoot,
+  resolveGlobalRoot,
+  getGlobalConfigPath,
+  loadGlobalKbConfig,
+  hasLocalWhytcard,
+  getGlobalProjectDir,
+  getGlobalDocsDir,
+} = require("./lib/whytcard-kb");
 
 // Keyword → dispatch hint mapping
 const DISPATCH_RULES = [
@@ -46,6 +57,55 @@ const DISPATCH_RULES = [
 handleStdin((data) => {
   const prompt = data.prompt || "";
   const hints = [];
+
+  // ─── Auto-onboarding (no slash commands needed) ──────────────────────
+  // Keep this lightweight: do not write files here. SessionStart hook does the bootstrap.
+  if (process.env.WHYTCARD_DISABLE_AUTO_SETUP !== "1") {
+    const cwd = data.cwd || process.cwd();
+    const projectRoot = (() => {
+      let dir = path.resolve(cwd);
+      for (let i = 0; i < 12; i++) {
+        if (fs.existsSync(path.join(dir, ".git"))) return dir;
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+      }
+      return path.resolve(cwd);
+    })();
+
+    const projectCfg = loadConfig(projectRoot);
+    if (projectCfg.autoSetup !== false) {
+      const resolvedRoot =
+        typeof projectCfg.globalRoot === "string" && projectCfg.globalRoot.trim()
+          ? projectCfg.globalRoot.trim()
+          : resolveGlobalRoot();
+      const globalCfg = loadGlobalKbConfig(resolvedRoot);
+      const cfgPath = getGlobalConfigPath(resolvedRoot);
+      const defaultRoot = getDefaultGlobalRoot();
+      const globalProjectDir = getGlobalProjectDir(resolvedRoot, projectRoot);
+      const globalDocsDir = getGlobalDocsDir(globalProjectDir);
+
+      const kbMissing = !hasLocalWhytcard(projectRoot);
+      const needsConfirm = !globalCfg || globalCfg.confirmed !== true;
+
+      if (kbMissing || needsConfirm) {
+        hints.push(
+          [
+            "WC-ONBOARDING: WhytCard knowledge base should be auto-initialized (no /wc-* required).",
+            kbMissing ? `- This project has no .whytcard yet at: ${path.join(projectRoot, ".whytcard")}` : "- .whytcard exists",
+            !globalCfg
+              ? `- No global config yet. Default recommendation: GLOBAL at ${defaultRoot}`
+              : `- Global config found at ${cfgPath} (confirmed=${globalCfg.confirmed === true})`,
+            "Ask the user ONCE to confirm:",
+            "1) kbMode: GLOBAL (recommended) or LOCAL",
+            `2) If GLOBAL: globalRoot location (default: ${resolvedRoot || defaultRoot})`,
+            "Then persist config (kbMode, globalRoot, confirmed:true) and ensure .whytcard points to the right location.",
+            `GLOBAL target for this repo: ${globalDocsDir}`,
+          ].join("\n")
+        );
+      }
+    }
+  }
 
   for (const [pattern, hint] of DISPATCH_RULES) {
     if (pattern.test(prompt)) {

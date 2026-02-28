@@ -161,6 +161,10 @@ function loadConfig(cwd) {
     darkModeCheck: true,
     researchFirst: true,
     versionCheck: true,
+    // Knowledge base onboarding (project-level overrides)
+    autoSetup: true,
+    kbMode: null,        // "global" | "local" | null (inherit global config)
+    globalRoot: null,    // optional override for GLOBAL root path
   };
   const configPath = path.join(cwd, "wc-config.json");
   if (!fs.existsSync(configPath)) return defaults;

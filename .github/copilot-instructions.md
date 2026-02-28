@@ -5,7 +5,26 @@ This repository uses the WhytCard AI development methodology. All AI-assisted wo
 ## Before doing anything
 
 1. Check if `.whytcard/` exists in the project root. If it does, read `.whytcard/index.md` to understand the current project state, active plans, and recent decisions.
-2. If `.whytcard/` doesn't exist, suggest initializing it before starting significant work.
+2. If `.whytcard/` doesn't exist, **run onboarding automatically** (do NOT ask the user to run slash commands).
+
+### Onboarding (no commands)
+
+Ask the user ONCE (default = GLOBAL):
+- **KB mode**: GLOBAL (recommended) or LOCAL
+- If GLOBAL: **where should the global root live?** (default: `~/.whytcard` or `%USERPROFILE%\\.whytcard`)
+
+Then create the knowledge base:
+- **GLOBAL**:
+  - Create: `{globalRoot}/projects/{projectSlug}-{projectId}/docs/{brainstorms,plans,research,logs,reviews,stacks,context,etc,instructions}/`
+  - Create: `{globalRoot}/projects/{projectSlug}-{projectId}/instructions/`
+  - Create: `{globalRoot}/projects/{projectSlug}-{projectId}/meta.json` (repo path, projectId, createdAt, stack)
+  - Attach the repo by linking: `.whytcard -> {globalProjectDir}/docs` (symlink/junction). If linking fails: fall back to LOCAL.
+- **LOCAL**:
+  - Create: `.whytcard/{brainstorms,plans,research,logs,reviews,stacks,context,etc,instructions}/` + `.whytcard/index.md`
+
+Persist the choice so it never asks again on this machine:
+- Write a locator: `~/.whytcard/locator.json` with `{ globalRoot }`
+- Write config: `{globalRoot}/config.json` with `{ version, kbMode, globalRoot, confirmed:true }`
 
 ## Non-negotiable rules
 

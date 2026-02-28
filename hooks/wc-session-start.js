@@ -17,7 +17,15 @@ const {
   getGlobalConfigPath,
   loadGlobalKbConfig,
   getGlobalProjectDir,
+  getGlobalDocsDir,
+  resolveGlobalRoot,
   hasLocalWhytcard,
+  ensureGlobalConfig,
+  ensureKbSkeleton,
+  ensureIndexMd,
+  ensureOnboardingBrainstorm,
+  ensureGlobalProjectLayout,
+  tryCreateDirLink,
 } = require("./lib/whytcard-kb");
 
 // ─── Load constitution ──────────────────────────────────────────────────
@@ -109,8 +117,22 @@ function detectStack(cwd) {
 // ─── Build context and output ───────────────────────────────────────────
 
 const cwd = process.cwd();
-const stack = detectStack(cwd);
-const config = loadConfig(cwd);
+
+function findProjectRoot(startDir) {
+  // Prefer a git root if present; otherwise use the current working directory.
+  let dir = path.resolve(startDir);
+  for (let i = 0; i < 12; i++) {
+    if (fs.existsSync(path.join(dir, ".git"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.resolve(startDir);
+}
+
+const projectRoot = findProjectRoot(cwd);
+const stack = detectStack(projectRoot);
+const config = loadConfig(projectRoot);
 
 const stackLine = stack.length > 0
   ? `\nDetected stack: ${stack.join(", ")}. Prioritize tools and patterns for these technologies.`
@@ -118,70 +140,201 @@ const stackLine = stack.length > 0
 
 const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
 
-// ─── Optional onboarding (auto, no commands) ───────────────────────────
+// ─── Knowledge base onboarding (auto, no commands) ──────────────────────
 
-function buildOnboardingContext(cwdPath) {
-  // If the project already has a .whytcard folder (local or symlink), don't nag.
-  if (hasLocalWhytcard(cwdPath)) return "";
+function looksLikeProject(rootDir) {
+  for (const p of [".git", "package.json", "pyproject.toml", "requirements.txt", "Cargo.toml", "go.mod"]) {
+    if (fs.existsSync(path.join(rootDir, p))) return true;
+  }
+  return false;
+}
 
-  const globalRoot = getDefaultGlobalRoot();
-  const globalCfgPath = getGlobalConfigPath(globalRoot);
-  const globalCfg = loadGlobalKbConfig(globalRoot);
-  const globalProjectDir = getGlobalProjectDir(globalRoot, cwdPath);
+function shouldAutoSetupKb(rootDir) {
+  if (process.env.WHYTCARD_DISABLE_AUTO_SETUP === "1") return false;
+  if (config && config.autoSetup === false) return false;
+  return looksLikeProject(rootDir);
+}
 
-  // Keep this short: it's injected in every SessionStart.
-  // It must be actionable, and it must not require the user to memorize commands.
+function detectProjectName(rootDir) {
+  const pkgPath = path.join(rootDir, "package.json");
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+      if (pkg && typeof pkg.name === "string" && pkg.name.trim()) return pkg.name.trim();
+    } catch { /* ignore */ }
+  }
+  return path.basename(path.resolve(rootDir));
+}
+
+function bootstrapKbIfNeeded(rootDir) {
+  const kbPath = path.join(rootDir, ".whytcard");
+  if (hasLocalWhytcard(rootDir)) return { status: "present", kbPath };
+
+  try {
+    const projectName = detectProjectName(rootDir);
+    const perProjectMode = config && typeof config.kbMode === "string" ? config.kbMode : null;
+    const perProjectRoot = config && typeof config.globalRoot === "string" ? config.globalRoot : null;
+
+    const resolvedRoot = (perProjectRoot && perProjectRoot.trim()) ? perProjectRoot.trim() : resolveGlobalRoot();
+    let globalCfg = loadGlobalKbConfig(resolvedRoot);
+
+    if (!globalCfg) {
+      ensureGlobalConfig({ kbMode: perProjectMode || "global", globalRoot: resolvedRoot, confirmed: false });
+      globalCfg = loadGlobalKbConfig(resolvedRoot);
+    }
+
+    const mode = String(perProjectMode || globalCfg.kbMode || globalCfg.mode || "global").toLowerCase();
+
+    if (mode === "local") {
+      ensureKbSkeleton(kbPath);
+      ensureIndexMd(kbPath, { projectName, stack, sourceLabel: "local-kb" });
+      ensureOnboardingBrainstorm(kbPath, { projectName, projectRoot: rootDir, kbMode: "local", globalRoot: resolvedRoot, stack });
+      return { status: "created", mode: "local", kbPath, globalRoot: resolvedRoot, globalCfg };
+    }
+
+    const { projDir, docsDir } = ensureGlobalProjectLayout({
+      globalRoot: resolvedRoot,
+      projectRoot: rootDir,
+      stack,
+      projectName,
+    });
+    ensureOnboardingBrainstorm(docsDir, { projectName, projectRoot: rootDir, kbMode: "global", globalRoot: resolvedRoot, stack });
+
+    const linked = tryCreateDirLink(kbPath, docsDir);
+    if (!linked) {
+      ensureKbSkeleton(kbPath);
+      ensureIndexMd(kbPath, { projectName, stack, sourceLabel: "local-fallback" });
+      ensureOnboardingBrainstorm(kbPath, { projectName, projectRoot: rootDir, kbMode: "local-fallback", globalRoot: resolvedRoot, stack });
+      return {
+        status: "created",
+        mode: "local-fallback",
+        kbPath,
+        globalRoot: resolvedRoot,
+        globalCfg,
+        globalProjectDir: projDir,
+        globalDocsDir: docsDir,
+      };
+    }
+
+    return {
+      status: "linked",
+      mode: "global",
+      kbPath,
+      globalRoot: resolvedRoot,
+      globalCfg,
+      globalProjectDir: projDir,
+      globalDocsDir: docsDir,
+    };
+  } catch (err) {
+    process.stderr.write(`wc-session-start: KB bootstrap failed (non-fatal) — ${err.message}\n`);
+    return { status: "error", kbPath, error: err.message };
+  }
+}
+
+function buildOnboardingContext(rootDir) {
+  const kbStatus = shouldAutoSetupKb(rootDir)
+    ? bootstrapKbIfNeeded(rootDir)
+    : { status: hasLocalWhytcard(rootDir) ? "present" : "absent", kbPath: path.join(rootDir, ".whytcard") };
+
+  const defaultRoot = getDefaultGlobalRoot();
+  const resolvedRoot = (config && typeof config.globalRoot === "string" && config.globalRoot.trim())
+    ? config.globalRoot.trim()
+    : resolveGlobalRoot();
+  const cfgPath = getGlobalConfigPath(resolvedRoot);
+  const globalCfg = loadGlobalKbConfig(resolvedRoot);
+  const globalProjectDir = getGlobalProjectDir(resolvedRoot, rootDir);
+  const globalDocsDir = getGlobalDocsDir(globalProjectDir);
+
+  // If config exists and is confirmed, and KB is present, do not nag.
+  if (kbStatus.status === "present" && globalCfg && globalCfg.confirmed !== false) return "";
+  if (kbStatus.status === "linked" && globalCfg && globalCfg.confirmed !== false) return "";
+
+  // First-time onboarding (no config yet)
   if (!globalCfg) {
     return `
 
 <WC-ONBOARDING>
-This project has no WhytCard knowledge base yet.
+WhytCard detected that this project has no knowledge base yet.
 
-Default recommendation: use a GLOBAL knowledge base (no clutter in repos).
+Goal: the user should NOT have to run slash commands (no /wc-* required).
 
-Ask the user ONCE:
+Ask the user ONCE (default = GLOBAL):
 1) Knowledge base mode: GLOBAL (recommended) or LOCAL
-2) If GLOBAL: where should the global root live? (default: ${globalRoot})
+2) If GLOBAL: where should the global root live? (default: ${defaultRoot})
 
-Then configure automatically:
-- Create the global structure at {globalRoot}/projects/{projectSlug}-{projectId}/:
-  - docs/{brainstorms,plans,research,logs,reviews,stacks}/
-  - instructions/
-  - meta.json (repo path, projectId, createdAt, stack)
-- Create a .whytcard entry in the repo:
-  - Prefer a symlink: .whytcard -> ${globalProjectDir}
-  - If symlink fails: fall back to LOCAL .whytcard (keep plugin functional)
-- Persist the choice so future sessions don't ask again:
-  - write ${globalCfgPath} with { mode, globalRoot, projects[...] } (dynamic values, no hardcoded paths)
+Then configure:
+- Persist choice:
+  - write ${cfgPath} with { version, kbMode, globalRoot, confirmed }
+  - write ${path.join(defaultRoot, "locator.json")} with { globalRoot } so we can find it later
+- If GLOBAL:
+  - Create: {globalRoot}/projects/{projectSlug}-{projectId}/docs/{brainstorms,plans,research,logs,reviews,stacks,context,etc,instructions}/
+  - Create: {globalRoot}/projects/{projectSlug}-{projectId}/instructions/
+  - Create: meta.json (repo path, projectId, createdAt, stack)
+  - Create a directory link in the repo: .whytcard -> ${globalDocsDir}
+  - If linking fails: fall back to LOCAL .whytcard
+- If LOCAL:
+  - Create .whytcard/{brainstorms,plans,logs,reviews,research,context,stacks,etc,instructions}/ + index.md
 
-Goal: after this onboarding, the user should never have to repeat setup per project/session.
+After onboarding, proceed with the user's request normally.
 </WC-ONBOARDING>`;
   }
 
-  // Config exists. If mode is global, guide the agent to attach this project automatically.
-  const mode = globalCfg.mode || globalCfg.kbMode || "global";
-  if (String(mode).toLowerCase() === "global") {
+  // Config exists but may be unconfirmed → request confirmation once.
+  const confirmed = globalCfg.confirmed === true;
+  const currentMode = String(globalCfg.kbMode || globalCfg.mode || "global").toLowerCase();
+
+  if (!confirmed) {
+    const whatWeDid =
+      kbStatus.status === "linked"
+        ? `Auto-created GLOBAL KB and linked ${kbStatus.kbPath} -> ${kbStatus.globalDocsDir}`
+        : kbStatus.status === "created"
+          ? `Auto-created KB (${kbStatus.mode}) at ${kbStatus.kbPath}`
+          : `KB is not initialized yet.`;
+
     return `
 
 <WC-ONBOARDING>
-WhytCard global knowledge base detected.
-If this project has no .whytcard yet, attach it automatically:
-- Ensure global project dir exists: ${globalProjectDir}
-- Create symlink: .whytcard -> ${globalProjectDir}
-- If symlink fails: fall back to LOCAL .whytcard to keep the plugin working.
+WhytCard onboarding needs ONE confirmation (then never ask again on this machine).
+
+${whatWeDid}
+
+Current config:
+- kbMode: ${currentMode}
+- globalRoot: ${resolvedRoot}
+- config: ${cfgPath}
+
+Ask the user:
+- Keep GLOBAL (recommended) or switch to LOCAL?
+- If GLOBAL: keep location "${resolvedRoot}" or choose another path?
+
+Then:
+- Update ${cfgPath}: set { kbMode, globalRoot, confirmed:true }
+- If mode/location changes, migrate by re-linking .whytcard accordingly (junction/symlink). If linking fails, keep LOCAL.
 </WC-ONBOARDING>`;
   }
 
-  // Local mode: remind to create .whytcard in-repo.
+  // Confirmed config exists, but KB missing → guide attachment.
+  if (currentMode === "global") {
+    return `
+
+<WC-ONBOARDING>
+WhytCard GLOBAL knowledge base is configured.
+If this project has no .whytcard yet, attach it automatically:
+- Ensure global project dir exists: ${globalProjectDir}
+- Create directory link in repo: .whytcard -> ${globalDocsDir}
+- If linking fails: fall back to LOCAL .whytcard
+</WC-ONBOARDING>`;
+  }
+
   return `
 
 <WC-ONBOARDING>
-WhytCard config is set to LOCAL mode. This project has no .whytcard yet.
+WhytCard is configured in LOCAL mode but this project has no .whytcard yet.
 Create .whytcard/ in the repo and initialize index.md (same structure as usual).
 </WC-ONBOARDING>`;
 }
 
-const onboarding = buildOnboardingContext(cwd);
+const onboarding = buildOnboardingContext(projectRoot);
 
 const context = `<WHYTCARD-CONSTITUTION>
 ${constitution}
