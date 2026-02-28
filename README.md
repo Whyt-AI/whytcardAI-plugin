@@ -17,6 +17,30 @@ Turns your AI coding assistant into a disciplined co-founder CTO that:
 
 ## The Pipeline
 
+### Cursor (minimal command set)
+
+**One command (recommended):**
+
+```
+/wc-Whytcard_orchestrator → setup → brainstorm → plan → execute → review
+```
+
+**Or step-by-step:**
+
+```
+/wc-1_setup
+     ↓
+/wc-2_brainstorm →  .whytcard/brainstorms/
+     ↓
+/wc-3_plan       →  .whytcard/plans/
+     ↓
+/wc-4_execute    →  .whytcard/logs/
+     ↓
+/wc-5_review     →  .whytcard/reviews/
+```
+
+### Claude Code (slash command docs)
+
 ```
 /setup      →  initialize .whytcard/ knowledge base
      ↓
@@ -73,6 +97,12 @@ whytcardAI-plugin/
 │   ├── brainstorm.mdc            ← Agent-decided: brainstorming protocol
 │   └── execution-tracking.mdc    ← Auto-attached on .whytcard/ plan/log files
 ├── skills/
+│   ├── wc-Whytcard_orchestrator/SKILL.md ← End-to-end orchestrator (Cursor)
+│   ├── wc-1_setup/SKILL.md        ← Step 1: initialize .whytcard/ (Cursor)
+│   ├── wc-2_brainstorm/SKILL.md   ← Step 2: structured brainstorm (Cursor)
+│   ├── wc-3_plan/SKILL.md         ← Step 3: implementation plan (Cursor)
+│   ├── wc-4_execute/SKILL.md      ← Step 4: build from plan (Cursor)
+│   ├── wc-5_review/SKILL.md       ← Step 5: final quality gate (Cursor)
 │   ├── wc-setup/SKILL.md         ← Initialize .whytcard/ knowledge base
 │   ├── wc-brainstorm/SKILL.md    ← Structured brainstorming with live research
 │   ├── wc-plan/SKILL.md          ← A-Z planning with visual HTML templates
@@ -112,7 +142,7 @@ Every project gets a `.whytcard/` directory that stores all context:
 └── context/       ← Session summaries, decision log
 ```
 
-Run `/setup` to initialize, or any pipeline command will auto-create it if missing.
+Run `/wc-1_setup` (Cursor) or `/setup` (Claude Code) to initialize — any pipeline command will auto-create it if missing.
 
 ## Installation
 
@@ -130,6 +160,7 @@ The installer is interactive — it shows what will be installed and asks for co
 |---|---|
 | `--force` | Skip confirmation prompt |
 | `--status` | Show what's currently installed |
+| `--advanced` | Also install optional + legacy skills (more commands) |
 | `--uninstall` | Remove all globally installed components |
 
 After install, restart Cursor and enable **Third-party skills** in Cursor Settings > Features.
@@ -175,6 +206,19 @@ Create an optional `wc-config.json` in your project root:
 All options default to `true`. Set `false` to disable specific checks.
 
 ## Slash Commands
+
+### Cursor (skills)
+
+| Command | What it does |
+|---|---|
+| `/wc-Whytcard_orchestrator` | Runs the full pipeline end-to-end with minimal/no user intervention |
+| `/wc-1_setup` | Initialize `.whytcard/` knowledge base in the project |
+| `/wc-2_brainstorm` | Structured brainstorming: challenge, research live, 3+ approaches, documented output |
+| `/wc-3_plan` | A-Z implementation plan from brainstorm: architecture, visual templates, increments |
+| `/wc-4_execute` | Build the project from the plan, increment by increment, with verification |
+| `/wc-5_review` | Final 8-pass quality gate: code, visual, a11y, i18n, perf, security, tests |
+
+### Claude Code (command docs)
 
 | Command | What it does |
 |---|---|
