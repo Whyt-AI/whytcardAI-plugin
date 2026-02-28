@@ -30,7 +30,13 @@ const DISPATCH_RULES = [
   [/\b(accessib\w*|a11y|wcag|screen.?reader|aria|focus)\b/i,
     "WC-DISPATCH: Accessibility task detected → verify semantic HTML, ARIA, keyboard nav, contrast AA, prefers-reduced-motion."],
   [/\b(plan|spec|architect|rfc)\b/i,
-    "WC-DISPATCH: Planning task detected → write structured plan: goals, constraints, approach, risks, steps."],
+    "WC-DISPATCH: Planning task detected → invoke wc-plan skill. Read brainstorm first, verify decisions, architect A-Z, generate visual HTML templates, define increments."],
+  [/\b(brainstorm\w*|ideate?\b|explor\w+\s+(?:idea|option|approach|solution)|think\s+through|weigh\s+(?:option|approach)|let'?s\s+think|on\s+(?:r[eé]fl[eé]chit?|pense)|what\s+(?:if|about)|should\s+(?:we|i)\s+(?:use|go\s+with|pick|choose))\b/i,
+    "WC-DISPATCH: Brainstorming detected → invoke wc-brainstorm skill. Challenge assumptions, research live, generate 3+ approaches, produce wc-brainstorm-{subject}-{date}-{time}.md file."],
+  [/\b(build|execut\w+|implement|construct|cr[eé]\w+\s+(?:le|the)\s+proje[ct]|go\s+build|start\s+(?:building|coding|implementing))\b/i,
+    "WC-DISPATCH: Execution detected → invoke wc-execute skill. Read the plan, build increment by increment, verify after each, log progress."],
+  [/\b(review|audit|quality|ship|ready\s+(?:to|for)\s+(?:ship|prod|deploy|launch)|final\s+check)\b/i,
+    "WC-DISPATCH: Review task detected → invoke wc-review skill. 8-pass quality gate: plan compliance, code, visual, a11y, i18n, perf, security, tests. Verdict: SHIP or NOT READY."],
 ];
 
 handleStdin((data) => {

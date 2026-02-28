@@ -117,20 +117,21 @@ Before acting on any task, match the user's request against this table and invok
 | After any UI change | Browser screenshot tool (3 viewports: 375/768/1440px) | Use any available screenshot tool. If none, ask user to verify visually. |
 | Research, docs, "how does X work" | Documentation lookup tools + WebSearch | Use WebSearch to find official documentation directly. |
 | Research any topic | WebSearch (dual-angle: good query + bad query) | Built-in — always available. |
-| Feature, multi-step task | Skill: `superpowers:brainstorming` then `workflows:plan` | Write a structured plan manually: goals, constraints, approach, risks, steps. |
-| Code review, PR review | Skill: `workflows:review` or `code-review:code-review` | Review manually: correctness, edge cases, security, performance, readability. |
+| Brainstorm, ideate, explore options, "what if", "should we" | Skill: `wc-brainstorm` | Challenge assumptions, research dual-angle live, generate 3+ approaches, stress-test, create wc-brainstorm-{subject}-{date}-{time}.md |
+| Plan, architect, spec, "how do we build this" | Skill: `wc-plan` | Read brainstorm, verify decisions, architect A-Z, generate HTML visual templates, define increments, write wc-plan-{project}-{date}.md |
+| Build, execute, implement, "start building" | Skill: `wc-execute` | Read plan, build increment by increment, verify after each, log progress in wc-execution-log-{project}-{date}.md, run wc-review on completion |
+| Review, audit, quality gate, "ready to ship?" | Skill: `wc-review` | 8-pass gate (plan, code, visual, a11y, i18n, perf, security, tests), produce wc-review-{project}-{date}.md with SHIP/NOT READY verdict |
+| Feature, multi-step task | Skill: `wc-brainstorm` then `wc-plan` | Brainstorm first, then plan. Write structured docs: goals, constraints, approach, risks, steps. |
+| Code review, PR review | Skill: `wc-review` | Review: correctness, edge cases, security, performance, readability. |
 | Stripe, payments, billing | Skill: `stripe:stripe-best-practices` | WebSearch for official Stripe docs and current best practices. |
-| Deploy, ship, production | Skill: `vercel:deploy` + `superpowers:verification-before-completion` | Run build, check for errors/warnings, verify environment variables, test deployment manually. |
-| Bug, error, broken, failing | Skill: `superpowers:systematic-debugging` | Debug systematically: reproduce, hypothesize, instrument, verify, fix, re-verify. |
+| Deploy, ship, production | Skill: `wc-review` then deploy | Run wc-review first. Build, verify no errors/warnings, check environment variables, then deploy. |
+| Bug, error, broken, failing | Debug systematically | Reproduce, hypothesize, instrument, verify, fix, re-verify. Document resolution. |
 | Scraping, URL, fetch web content | Web scraping tools or browser automation | Use WebSearch or curl/fetch to retrieve content. |
 | Responsive, mobile, tablet | Screenshots at 375/768/1440px viewports | Apply responsive CSS rules. Test at multiple breakpoints if browser tools available. |
 | Install package, add dependency | WebSearch "[pkg] latest version" + documentation tools | WebSearch "[pkg] npm latest version [current year]". Check npmjs.com directly. |
 | Supabase, database, auth, RLS | MCP: `supabase_whytcard` tools | Use Supabase CLI or dashboard directly. WebSearch for current Supabase docs. |
-| Git, commit, branch, PR | Skill: `superpowers:finishing-a-development-branch` | Follow standard git workflow: clean commits, meaningful messages, PR description. |
-| Write a plan, spec, design | Skill: `workflows:plan` or `superpowers:writing-plans` | Write structured document: context, goals, constraints, approach, risks, milestones. |
-| Create a skill or plugin | Skill: `plugin-dev:create-plugin` or `skill-creator:skill-creator` | Follow platform plugin docs. WebSearch "AI coding plugin creation [current year]". |
-| Hugging Face, ML, models | Skill: `huggingface-skills:*` (pick specific) | WebSearch for HuggingFace docs and model cards. |
-| Image generation | Skill: `gemini-imagegen` | Note limitation. Suggest user use external image generation tools. |
+| Git, commit, branch, PR | Standard git workflow | Clean commits, meaningful messages, PR description. |
+| Create a skill or plugin | Follow platform plugin docs | WebSearch "AI coding plugin creation [current year]". |
 | i18n, translation, locales | Check all required locales exist | Verify locale files manually. List missing translations. |
 | Accessibility, a11y, WCAG | Verify: focus, contrast, semantics, screen reader | Check manually: semantic HTML, ARIA labels, keyboard nav, color contrast AA. |
 

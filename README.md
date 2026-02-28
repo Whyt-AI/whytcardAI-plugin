@@ -12,6 +12,7 @@ Turns your AI coding assistant into a disciplined co-founder CTO that:
 - **Checks versions live** — never trusts training data for package versions
 - **Thinks UX-first** — evaluates every decision from the user's perspective
 - **Researches both sides** — good AND bad, with named examples and real data
+- **Brainstorms like a co-founder** — challenges ideas, researches live, documents everything in a structured file
 
 ## Platform Support
 
@@ -21,14 +22,16 @@ Turns your AI coding assistant into a disciplined co-founder CTO that:
 | Visual verification reminders | Auto-attached rule + PreToolUse/PostToolUse hooks | PreToolUse/PostToolUse hooks |
 | Research-first enforcement | Agent-decided rule + prompt dispatch hook | Prompt dispatch hook |
 | Version check reminders | Auto-attached rule + PreToolUse hook | PreToolUse hook |
+| Brainstorming sessions | Skill + rule + slash command + dispatch | Skill + dispatch |
 | Quality gate | Slash command + agent | Agent |
 | Stop verification | Stop hook (prompt) | Stop hook (prompt) |
-| Slash commands | /quality-gate, /research, /verify-visual | /quality-gate, /research, /verify-visual |
+| Slash commands | /brainstorm, /quality-gate, /research, /verify-visual | /brainstorm, /quality-gate, /research, /verify-visual |
 
 ## Structure
 
 ```
 whytcardAI-plugin/
+├── install.js                   ← Global installer (node install.js)
 ├── .claude-plugin/
 │   └── plugin.json              ← Claude Code manifest
 ├── .cursor-plugin/
@@ -44,16 +47,26 @@ whytcardAI-plugin/
 │   ├── wc-pre-edit-gate.js      ← Reminders before file edits
 │   └── wc-post-edit-verify.js   ← Reinforcement after visual file edits
 ├── rules/
-│   ├── constitution.mdc         ← Always-apply: core principles (Cursor)
-│   ├── visual-verify.mdc        ← Auto-attached on visual files (Cursor)
-│   ├── research-first.mdc       ← Agent-decided: research protocol (Cursor)
-│   └── version-check.mdc        ← Auto-attached on dependency files (Cursor)
+│   ├── constitution.mdc         ← Always-apply: core principles
+│   ├── visual-verify.mdc        ← Auto-attached on visual files
+│   ├── research-first.mdc       ← Agent-decided: research protocol
+│   ├── version-check.mdc        ← Auto-attached on dependency files
+│   ├── brainstorm.mdc           ← Agent-decided: brainstorming protocol
+│   └── execution-tracking.mdc   ← Auto-attached on plan/log files
 ├── skills/
+│   ├── wc-brainstorm/SKILL.md   ← Structured brainstorming with live research
+│   ├── wc-plan/SKILL.md         ← A-Z planning with visual HTML templates
+│   ├── wc-execute/SKILL.md      ← Increment-by-increment execution
+│   ├── wc-review/SKILL.md       ← 8-pass final quality gate
 │   ├── wc-dispatch/SKILL.md     ← Smart task router
 │   ├── wc-visual-verify/SKILL.md ← Visual verification protocol
 │   ├── wc-research-first/SKILL.md ← Research methodology
 │   └── wc-version-check/SKILL.md ← Package version verification
 ├── commands/
+│   ├── brainstorm.md            ← /brainstorm slash command
+│   ├── plan.md                  ← /plan slash command
+│   ├── execute.md               ← /execute slash command
+│   ├── review.md                ← /review slash command
 │   ├── quality-gate.md          ← /quality-gate slash command
 │   ├── research.md              ← /research slash command
 │   └── verify-visual.md         ← /verify-visual slash command
@@ -65,16 +78,49 @@ whytcardAI-plugin/
 
 ## Installation
 
-### Cursor (recommended for Cursor users)
+### Global install (recommended)
 
-Install from the Cursor Marketplace (when published), or manually:
+Installs rules, skills, and hooks into `~/.cursor/` so they apply across **all projects**:
 
-1. Clone this repo into your project or globally:
-   ```bash
-   git clone https://github.com/Whyt-AI/whytcardAI-plugin.git
-   ```
-2. Cursor automatically discovers plugins via `.cursor-plugin/plugin.json`
-3. Enable "Third-party skills" in Cursor Settings → Features if using hooks
+```bash
+node install.js
+```
+
+The installer is interactive — it shows what will be installed and asks for confirmation. Flags:
+
+| Flag | Effect |
+|---|---|
+| `--force` | Skip confirmation prompt |
+| `--status` | Show what's currently installed |
+| `--uninstall` | Remove all globally installed components |
+
+After install, restart Cursor and enable **Third-party skills** in Cursor Settings > Features.
+
+### What gets installed
+
+```
+~/.cursor/
+├── rules/
+│   ├── wc-constitution.mdc      (always active)
+│   ├── wc-visual-verify.mdc     (auto: .tsx, .css, .html, ...)
+│   ├── wc-research-first.mdc    (agent-decided)
+│   ├── wc-version-check.mdc     (auto: package.json, Cargo.toml, ...)
+│   ├── wc-brainstorm.mdc        (agent-decided)
+│   └── wc-execution-tracking.mdc (auto: wc-plan-*.md, wc-execution-log-*.md)
+├── skills-cursor/
+│   ├── wc-dispatch/SKILL.md
+│   ├── wc-visual-verify/SKILL.md
+│   ├── wc-research-first/SKILL.md
+│   ├── wc-version-check/SKILL.md
+│   ├── wc-brainstorm/SKILL.md
+│   ├── wc-plan/SKILL.md
+│   ├── wc-execute/SKILL.md
+│   └── wc-review/SKILL.md
+├── plugins/whytcardAI-plugin/
+│   ├── constitution.md
+│   └── hooks/                    (hook scripts + shared lib)
+└── hooks.json                    (merged with existing hooks)
+```
 
 ### Claude Code
 
@@ -91,12 +137,21 @@ Or add to `~/.claude/settings.json`:
 }
 ```
 
-### Manual (any platform)
+### Per-project install (alternative)
 
-1. Copy `constitution.md` into your project's root (or AGENTS.md / CLAUDE.md)
-2. Copy `rules/` directory to `.cursor/rules/` (Cursor) or use as reference
-3. Copy `hooks/` and configure in your platform's hooks config
-4. Copy `skills/` to your platform's skills directory
+Clone into a project — Cursor discovers it via `.cursor-plugin/plugin.json`:
+
+```bash
+git clone https://github.com/Whyt-AI/whytcardAI-plugin.git
+```
+
+### Uninstall
+
+```bash
+node install.js --uninstall
+```
+
+Cleanly removes all WhytCard components from `~/.cursor/`. If other hooks exist in `hooks.json`, only WhytCard entries are removed.
 
 ## Configuration
 
@@ -121,22 +176,48 @@ All options default to `true`. Set `false` to disable specific checks.
 - **Claude Code**: SessionStart hook injects core principles + stack detection + config.
 
 ### On user prompt
-- Both: `wc-prompt-dispatch` hook analyzes keywords and injects dispatch hints (UI, research, packages, bugs, deploy, etc.)
+- Both: `wc-prompt-dispatch` hook analyzes keywords and injects dispatch hints (UI, research, packages, bugs, deploy, brainstorming, etc.)
 
 ### During edits
 - **Cursor**: Auto-attached rules fire when editing visual files or dependency files, injecting the right protocol directly.
 - **Both**: PreToolUse hook reminds before edits. PostToolUse hook reinforces after visual file edits.
 
+### During brainstorming
+- Trigger: `/brainstorm`, or keywords like "brainstorm", "what if", "should we use", "let's think through"
+- Agent challenges assumptions, researches live during the session, generates 3+ approaches
+- Outputs a `wc-brainstorm-{subject}-{date}-{time}.md` with full session documentation
+- File includes: question, constraints, research findings, approaches, rejections, decision, next steps, sources
+
 ### Before stopping
 - Both: Stop hook verifies visual checks, version checks, and research were completed.
+
+## The Pipeline
+
+The full project lifecycle, from idea to ship:
+
+```
+/brainstorm  →  explore, challenge, research live  →  wc-brainstorm-{subject}-{date}.md
+     ↓
+/plan        →  architect A-Z, visual HTML templates  →  wc-plan-{project}-{date}.md
+     ↓
+/execute     →  build increment by increment, verify  →  wc-execution-log-{project}-{date}.md
+     ↓
+/review      →  8-pass quality gate, ship or iterate  →  wc-review-{project}-{date}.md
+```
+
+Each stage feeds the next. Hooks maintain discipline throughout. Files are the context — not memory.
 
 ## Slash Commands
 
 | Command | What it does |
 |---|---|
-| `/quality-gate` | Run comprehensive quality verification on current work |
-| `/research` | Perform dual-angle research on a topic |
-| `/verify-visual` | Take and evaluate screenshots at 3 viewports |
+| `/brainstorm` | Structured brainstorming: challenge, research live, 3+ approaches, documented output |
+| `/plan` | A-Z implementation plan from brainstorm: architecture, visual templates, increments |
+| `/execute` | Build the project from the plan, increment by increment, with verification |
+| `/review` | Final 8-pass quality gate: code, visual, a11y, i18n, perf, security, tests |
+| `/quality-gate` | Lightweight quality check on current work (outside the pipeline) |
+| `/research` | Standalone dual-angle research on any topic |
+| `/verify-visual` | Standalone visual verification at 3 viewports |
 
 ## Testing
 

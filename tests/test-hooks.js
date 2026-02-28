@@ -6,7 +6,7 @@
  * Run: node tests/test-hooks.js
  */
 
-const { execSync } = require("child_process");
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -39,7 +39,8 @@ function assertEqual(actual, expected, message) {
 function runHook(hookFile, stdinData) {
   const hookPath = path.join(HOOKS_DIR, hookFile);
   const input = typeof stdinData === "string" ? stdinData : JSON.stringify(stdinData);
-  const result = execSync(`echo '${input.replace(/'/g, "'\\''")}' | node "${hookPath}"`, {
+  const result = execFileSync("node", [hookPath], {
+    input,
     encoding: "utf8",
     timeout: 10000,
   });
@@ -48,7 +49,7 @@ function runHook(hookFile, stdinData) {
 
 function runSessionStart() {
   const hookPath = path.join(HOOKS_DIR, "wc-session-start.js");
-  const result = execSync(`node "${hookPath}"`, { encoding: "utf8", timeout: 10000 });
+  const result = execFileSync("node", [hookPath], { encoding: "utf8", timeout: 10000 });
   return JSON.parse(result.trim());
 }
 
@@ -221,14 +222,14 @@ test("Write + TSX → visual + research reminders", () => {
 
 test("empty stdin → empty object", () => {
   const hookPath = path.join(HOOKS_DIR, "wc-pre-edit-gate.js");
-  const result = execSync(`echo '' | node "${hookPath}"`, { encoding: "utf8", timeout: 10000 });
+  const result = execFileSync("node", [hookPath], { input: "", encoding: "utf8", timeout: 10000 });
   const out = JSON.parse(result.trim() || "{}");
   assert(!out.hookSpecificOutput, "empty input should produce empty object");
 });
 
 test("invalid JSON → empty object", () => {
   const hookPath = path.join(HOOKS_DIR, "wc-pre-edit-gate.js");
-  const result = execSync(`echo 'not json' | node "${hookPath}"`, { encoding: "utf8", timeout: 10000 });
+  const result = execFileSync("node", [hookPath], { input: "not json", encoding: "utf8", timeout: 10000 });
   const out = JSON.parse(result.trim() || "{}");
   assert(!out.hookSpecificOutput, "invalid JSON should produce empty object");
 });
@@ -274,7 +275,7 @@ test("TypeScript file → no reminder", () => {
 
 test("empty input → empty object", () => {
   const hookPath = path.join(HOOKS_DIR, "wc-post-edit-verify.js");
-  const result = execSync(`echo '' | node "${hookPath}"`, { encoding: "utf8", timeout: 10000 });
+  const result = execFileSync("node", [hookPath], { input: "", encoding: "utf8", timeout: 10000 });
   assertEqual(result.trim(), "{}", "empty input → {}");
 });
 
@@ -391,7 +392,14 @@ test("Cursor hooks.json uses camelCase event names", () => {
 
 console.log("\n Rules (.mdc files)");
 
-const ruleFiles = ["constitution.mdc", "visual-verify.mdc", "research-first.mdc", "version-check.mdc"];
+const ruleFiles = [
+  "constitution.mdc",
+  "visual-verify.mdc",
+  "research-first.mdc",
+  "version-check.mdc",
+  "brainstorm.mdc",
+  "execution-tracking.mdc",
+];
 
 for (const file of ruleFiles) {
   test(`rules/${file} exists and has YAML frontmatter`, () => {
@@ -491,10 +499,20 @@ const requiredFiles = [
   "rules/visual-verify.mdc",
   "rules/research-first.mdc",
   "rules/version-check.mdc",
+  "rules/brainstorm.mdc",
+  "rules/execution-tracking.mdc",
+  "skills/wc-brainstorm/SKILL.md",
+  "skills/wc-plan/SKILL.md",
+  "skills/wc-execute/SKILL.md",
+  "skills/wc-review/SKILL.md",
   "skills/wc-dispatch/SKILL.md",
   "skills/wc-visual-verify/SKILL.md",
   "skills/wc-research-first/SKILL.md",
   "skills/wc-version-check/SKILL.md",
+  "commands/brainstorm.md",
+  "commands/plan.md",
+  "commands/execute.md",
+  "commands/review.md",
   "commands/quality-gate.md",
   "commands/research.md",
   "commands/verify-visual.md",
