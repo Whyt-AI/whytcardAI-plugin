@@ -1,25 +1,28 @@
 ---
 name: wc-review
-description: Final quality gate before shipping. Comprehensive review of everything built — code, UI, accessibility, i18n, performance, security, tests. Produces a ship-or-not verdict with evidence. Use after execution is complete, or anytime a quality checkpoint is needed.
+description: Final quality gate before shipping. Comprehensive 8-pass review covering code, UI, accessibility, i18n, performance, security, and tests. Produces a ship-or-not verdict in .whytcard/reviews/. Use after execution is complete.
 ---
 
 # Review Protocol
 
 You are the final gate. Nothing ships until you say it ships. Your job is to find every problem, rate its severity, and deliver a clear verdict. You are not here to be nice — you are here to prevent embarrassment in production.
 
-## Inputs
+## Before starting
 
-Read before starting:
-1. The plan file (`wc-plan-*.md`) — what was supposed to be built
-2. The execution log (`wc-execution-log-*.md`) — what was actually built
-3. The brainstorm file (`wc-brainstorm-*.md`) — original requirements and decisions
-4. The actual codebase — what exists right now
+1. **Check `.whytcard/` exists.** If not, flag this as a concern — a project should have been set up before reaching review.
+2. **Read `.whytcard/index.md`** for current project state.
+3. **Read the plan** from `.whytcard/plans/` — what was supposed to be built.
+4. **Read the execution log** from `.whytcard/logs/` — what was actually built.
+5. **Read the brainstorm** from `.whytcard/brainstorms/` — original requirements and decisions.
+6. **Read the actual codebase** — what exists right now.
 
 ## Output file
 
 ```
-wc-review-{project}-{YYYY-MM-DD}.md
+.whytcard/reviews/{project}-{YYYY-MM-DD}.md
 ```
+
+After writing, update `.whytcard/index.md` with the review result.
 
 ## The 8 review passes
 
@@ -29,214 +32,163 @@ Run ALL passes. Do not skip. Each pass produces findings.
 
 Compare what was built against what was planned:
 
-- Every increment in the plan: was it completed?
-- Every file in the plan: does it exist?
-- Every verification criterion: was it met?
-- Any deviations: were they documented and justified?
+- [ ] Every increment marked as complete in the execution log
+- [ ] Every file listed in the plan exists
+- [ ] Every feature specified in the plan is implemented
+- [ ] Any deviations from the plan are documented with reasons
+- [ ] Visual style matches the chosen template
 
-**Finding format**: `PLAN-{N}: {description} — {PASS|FAIL|DEVIATION}`
+**Findings format:**
+```
+PLAN-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
 ### Pass 2 — CODE QUALITY
 
-Scan every file that was created or modified:
+Review the actual code:
 
-- **No debug artifacts**: `console.log`, `console.debug`, `debugger`, `print()` used for debugging
-- **No placeholders**: `TODO`, `FIXME`, `HACK`, `PLACEHOLDER`, `MOCK`, `STUB`, `Lorem ipsum`
-- **No type escapes**: `as any`, `: any`, `@ts-ignore`, `@ts-nocheck` (without documented justification)
-- **No inline styles**: `style={{}}` where utility classes exist
-- **No hardcoded secrets**: API keys, passwords, tokens in source code
-- **No dead code**: unused imports, unreachable branches, commented-out code blocks
-- **Error handling**: every async call has error handling, no unhandled promise rejections
-- **Naming**: consistent naming conventions throughout
+- [ ] No `as any`, `: any`, `@ts-ignore`, `@ts-nocheck` without justification
+- [ ] No `console.log`, `console.debug`, `debugger`
+- [ ] No TODO, FIXME, HACK, PLACEHOLDER, MOCK, STUB
+- [ ] No hardcoded secrets, test credentials
+- [ ] No empty functions, placeholder returns
+- [ ] Type safety: strict TypeScript, no escape hatches
+- [ ] Error handling: every async operation has proper error handling
+- [ ] Naming: consistent, descriptive, following project conventions
+- [ ] File organization: logical grouping, no circular dependencies
+- [ ] Lint: 0 errors, 0 warnings on all modified files (run ReadLints)
 
-Use Grep to scan systematically. Do not rely on memory.
-
-**Finding format**: `CODE-{N}: {file}:{line} — {issue} — {CRITICAL|WARNING|INFO}`
+**Findings format:**
+```
+CODE-{N}: {CRITICAL|WARNING|OK} — {file:line} — {description}
+```
 
 ### Pass 3 — VISUAL VERIFICATION
 
-For every page/view in the project:
+For UI projects:
 
-1. Navigate to the page
-2. Screenshot at 375px (mobile)
-3. Screenshot at 768px (tablet)
-4. Screenshot at 1440px (desktop)
-5. Toggle dark mode, repeat screenshots
+- [ ] Screenshots at 3 viewports: 375px, 768px, 1440px
+- [ ] Dark mode verified
+- [ ] Light mode verified
+- [ ] Loading states are elegant (not generic spinners)
+- [ ] Error states are helpful
+- [ ] Empty states are designed
+- [ ] Typography hierarchy is correct
+- [ ] Spacing is consistent
+- [ ] Colors match the design system
+- [ ] Animations are subtle and fast (< 300ms UI, < 700ms page)
 
-Evaluate each screenshot:
-- Does it match the chosen visual template from the plan?
-- Is the visual hierarchy clear?
-- Is typography consistent?
-- Are spacings balanced?
-- Is contrast sufficient (AA minimum: 4.5:1)?
-- Would a user find this professional and polished?
-
-**Finding format**: `VISUAL-{N}: {page} at {viewport} — {issue} — {CRITICAL|WARNING|INFO}`
+**Findings format:**
+```
+VISUAL-{N}: {CRITICAL|WARNING|OK} — {description} — {viewport/mode}
+```
 
 ### Pass 4 — ACCESSIBILITY
 
-For every interactive page:
+- [ ] Keyboard navigation works for all interactive elements
+- [ ] Focus indicators are visible (focus-visible, not focus)
+- [ ] Color contrast meets AA (4.5:1 text, 3:1 large text)
+- [ ] Heading hierarchy (h1 > h2 > h3, no skips)
+- [ ] Semantic HTML (button, a, nav, main, not div onClick)
+- [ ] ARIA labels on interactive elements (translated, not hardcoded)
+- [ ] Images have alt text
+- [ ] prefers-reduced-motion respected
 
-- **Keyboard navigation**: Tab through every element. Is the order logical? Can you reach everything?
-- **Focus indicators**: Are they visible? Using `focus-visible:` not `focus:`?
-- **Semantic HTML**: Correct use of `<nav>`, `<main>`, `<button>`, `<a>`, heading hierarchy?
-- **ARIA labels**: All interactive elements have accessible names? Labels translated?
-- **Contrast**: Text meets 4.5:1 ratio? Large text meets 3:1?
-- **Reduced motion**: Animations respect `prefers-reduced-motion`?
-- **Screen reader**: Would the page make sense read aloud?
+**Findings format:**
+```
+A11Y-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
-**Finding format**: `A11Y-{N}: {component/page} — {issue} — {CRITICAL|WARNING|INFO}`
+### Pass 5 — INTERNATIONALIZATION
 
-### Pass 5 — INTERNATIONALIZATION (if applicable)
+- [ ] No hardcoded user-visible strings in source code
+- [ ] All translations exist in all required locale files
+- [ ] Dates, numbers, currencies formatted via i18n system
+- [ ] RTL support (if applicable)
+- [ ] Pluralization tested (0, 1, 2+)
 
-- Every user-visible string uses the translation system (no hardcoded text)
-- All required locales have keys for every string
-- Dates, numbers, currencies use the locale formatter (not raw `toLocaleString`)
-- Pluralization works correctly (0, 1, 2+ items)
-- RTL considerations (if applicable)
-
-Use Grep to find hardcoded strings in UI files.
-
-**Finding format**: `I18N-{N}: {file}:{line} — {issue} — {CRITICAL|WARNING|INFO}`
+**Findings format:**
+```
+I18N-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
 ### Pass 6 — PERFORMANCE
 
-- **Bundle size**: are there oversized dependencies? Check with `npm ls` or build output
-- **Images**: using optimized formats? Lazy loading below-the-fold?
-- **Unnecessary re-renders**: are React components structured to avoid wasted renders?
-- **Data fetching**: are requests parallelized where possible? Caching in place?
-- **Loading states**: do pages feel fast? Are there skeleton screens or progressive loading?
+- [ ] No unnecessary re-renders (React Profiler or equivalent)
+- [ ] Images optimized (next/image or equivalent, proper sizes)
+- [ ] Bundle size reasonable (check with build output)
+- [ ] No N+1 queries in data fetching
+- [ ] Lazy loading where appropriate
+- [ ] No memory leaks in event listeners / subscriptions
 
-**Finding format**: `PERF-{N}: {description} — {CRITICAL|WARNING|INFO}`
+**Findings format:**
+```
+PERF-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
 ### Pass 7 — SECURITY
 
-- **No secrets in code**: environment variables for all sensitive values
-- **Input validation**: user input validated on server side
-- **Auth checks**: protected routes actually require authentication
-- **CORS**: configured correctly (not `*` in production)
-- **Dependencies**: any known vulnerabilities? (`npm audit` or equivalent)
-- **SQL injection / XSS**: parameterized queries, sanitized output
+- [ ] No secrets in source code or config files
+- [ ] Authentication/authorization on all protected routes
+- [ ] Input validation (client AND server)
+- [ ] CSRF protection
+- [ ] XSS prevention (no dangerouslySetInnerHTML without sanitization)
+- [ ] SQL injection prevention (parameterized queries)
+- [ ] Rate limiting on public endpoints
+- [ ] CORS properly configured
 
-**Finding format**: `SEC-{N}: {description} — {CRITICAL|WARNING|INFO}`
+**Findings format:**
+```
+SEC-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
 ### Pass 8 — TESTS
 
-- **Test coverage**: do critical paths have tests?
-- **Test quality**: do tests actually assert meaningful things (not just "doesn't throw")?
-- **Run all tests**: execute and report results
-- **Edge cases**: are boundary conditions tested?
-- **Integration**: are the pieces tested together, not just in isolation?
+- [ ] Unit tests exist for critical business logic
+- [ ] Integration tests exist for API endpoints
+- [ ] All tests pass
+- [ ] Edge cases covered (empty input, max values, concurrent access)
+- [ ] Error paths tested (network failure, invalid data, timeout)
 
-**Finding format**: `TEST-{N}: {description} — {PASS|FAIL|MISSING}`
-
-## Severity classification
-
-| Level | Meaning | Ships? |
-|---|---|---|
-| CRITICAL | Broken, insecure, or blocks core functionality | NO — must fix |
-| WARNING | Degraded experience, accessibility gap, or maintainability issue | CONDITIONAL — should fix |
-| INFO | Improvement opportunity, minor inconsistency | YES — can fix later |
+**Findings format:**
+```
+TEST-{N}: {CRITICAL|WARNING|OK} — {description}
+```
 
 ## Verdict
 
-After all 8 passes, deliver one of:
-
-### SHIP IT
-```
-Zero CRITICAL findings. Zero or few WARNINGs (all acknowledged).
-The project meets the plan requirements and is production-ready.
-```
-
-### NOT READY
-```
-{count} CRITICAL, {count} WARNING findings.
-Must fix: {list of CRITICAL items with file:line}
-Should fix: {list of WARNING items}
-Estimated effort to resolve: {S/M/L}
-```
-
-### CONDITIONAL
-```
-No CRITICAL findings, but {count} WARNINGs that may matter.
-Ready to ship IF: {specific conditions}
-```
-
-## Review file structure
+After all 8 passes, count findings by severity:
 
 ```markdown
-# Review: {Project Name}
+## Verdict
 
-**Date**: {YYYY-MM-DD HH:mm}
-**Plan**: wc-plan-{project}-{date}.md
-**Execution log**: wc-execution-log-{project}-{date}.md
+| Severity | Count |
+|---|---|
+| CRITICAL | {n} |
+| WARNING | {n} |
+| OK | {n} |
 
----
-
-## Verdict: {SHIP IT | NOT READY | CONDITIONAL}
-
-{One paragraph summary of the project's state.}
-
-### Findings Summary
-
-| Pass | Critical | Warning | Info | Pass? |
-|---|---|---|---|---|
-| Plan compliance | {n} | {n} | {n} | {Y/N} |
-| Code quality | {n} | {n} | {n} | {Y/N} |
-| Visual | {n} | {n} | {n} | {Y/N} |
-| Accessibility | {n} | {n} | {n} | {Y/N} |
-| i18n | {n} | {n} | {n} | {Y/N} |
-| Performance | {n} | {n} | {n} | {Y/N} |
-| Security | {n} | {n} | {n} | {Y/N} |
-| Tests | {n} | {n} | {n} | {Y/N} |
-| **Total** | **{n}** | **{n}** | **{n}** | |
-
----
-
-## Detailed Findings
-
-### Plan Compliance
-{all PLAN-N findings}
-
-### Code Quality
-{all CODE-N findings}
-
-### Visual Verification
-{all VISUAL-N findings, with screenshot references}
-
-### Accessibility
-{all A11Y-N findings}
-
-### Internationalization
-{all I18N-N findings}
-
-### Performance
-{all PERF-N findings}
-
-### Security
-{all SEC-N findings}
-
-### Tests
-{all TEST-N findings}
-
----
-
-## Action Items (if NOT READY)
-
-| Priority | Finding | Fix |
-|---|---|---|
-| CRITICAL | {ID}: {description} | {suggested fix} |
-| WARNING | {ID}: {description} | {suggested fix} |
-
-## What's Good
-
-{Genuinely positive observations. Not filler — specific things done well.}
+### Decision: {SHIP IT | NOT READY | CONDITIONAL}
 ```
+
+**SHIP IT**: 0 CRITICAL, 0 WARNING, or all warnings have documented acceptance.
+**NOT READY**: Any CRITICAL finding, or > 3 unaddressed WARNINGS.
+**CONDITIONAL**: 0 CRITICAL but has WARNINGS that should be fixed soon. Ship with a follow-up plan.
+
+For NOT READY:
+- List exactly what needs to be fixed
+- Prioritize fixes by impact
+- Estimate effort for each fix
+
+For CONDITIONAL:
+- List the conditions
+- Set a timeline for addressing warnings
+- Document what's acceptable and what's not
 
 ## Critical rules
 
-1. **Evidence for every finding.** File path, line number, screenshot, or tool output. "It looks wrong" is not a finding.
-2. **Run the checks, don't imagine them.** Use Grep, ReadLints, browser tools. Not memory.
-3. **CRITICAL means CRITICAL.** Don't inflate severity to seem thorough. Don't deflate it to seem positive.
-4. **The verdict is honest.** If it's not ready, say so. The user wants truth, not comfort.
-5. **Praise what deserves praise.** If something is genuinely well done, say it. But only if it's true.
+1. **No shortcuts.** All 8 passes, every time. Even if "it's just a small change."
+2. **Evidence required.** Every finding includes proof (file:line, screenshot, test output, lint result).
+3. **Severity is honest.** Don't downgrade CRITICALs to make the verdict better.
+4. **The verdict is final** for this review cycle. If NOT READY, fix and re-review.
+5. **Update `.whytcard/index.md`** with the review result and verdict.

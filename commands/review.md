@@ -7,8 +7,9 @@ Run the final quality gate on the project. Ship-or-not verdict.
 Follow the wc-review skill protocol. This is the last checkpoint before shipping.
 
 ### Prerequisites
-1. Locate the plan (`wc-plan-*.md`) and execution log (`wc-execution-log-*.md`).
-2. If no plan exists, review the project as-is against general quality standards.
+1. Check `.whytcard/` exists.
+2. Locate the plan in `.whytcard/plans/` and execution log in `.whytcard/logs/`.
+3. If no plan exists, review the project as-is against general quality standards.
 
 ### The 8 passes (all mandatory)
 
@@ -27,4 +28,4 @@ Follow the wc-review skill protocol. This is the last checkpoint before shipping
 - **CONDITIONAL**: no CRITICAL but significant WARNINGs, with conditions for shipping
 
 ### Output
-Write `wc-review-{project}-{date}.md` with the findings summary table, all detailed findings with evidence, and the verdict.
+Write to `.whytcard/reviews/{project}-{date}.md`. Update `.whytcard/index.md` with the verdict.

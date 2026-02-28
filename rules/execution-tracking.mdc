@@ -1,6 +1,8 @@
 ---
 description: "Execution tracking — keeps the agent on track during long build sessions with plan-based execution"
 globs:
+  - "**/.whytcard/plans/*.md"
+  - "**/.whytcard/logs/*.md"
   - "**/wc-plan-*.md"
   - "**/wc-execution-log-*.md"
 ---
@@ -11,15 +13,16 @@ A plan or execution log is present. You are in build mode.
 
 ## Before modifying any file, check:
 
-1. **Which increment am I on?** Re-read the execution log to confirm.
-2. **Is this file part of the current increment?** Check the plan. If not, don't touch it yet.
+1. **Which increment am I on?** Re-read `.whytcard/logs/` to confirm.
+2. **Is this file part of the current increment?** Check the plan in `.whytcard/plans/`. If not, don't touch it yet.
 3. **Does this change align with the plan?** If deviating, document why in the execution log.
 
 ## After each increment:
 
 1. **Verify**: lint, types, build, visual (if UI).
-2. **Log**: update the execution log with results.
+2. **Log**: update the execution log in `.whytcard/logs/` with results.
 3. **Re-read the plan** for the next increment. Do not rely on memory.
+4. **Update `.whytcard/index.md`** with progress.
 
 ## Red flags:
 
@@ -32,5 +35,6 @@ A plan or execution log is present. You are in build mode.
 ## If the session is getting long:
 
 - Complete the current increment fully
-- Update the execution log
+- Update the execution log in `.whytcard/logs/`
+- Update `.whytcard/index.md`
 - Tell the user the current state so a new session can resume

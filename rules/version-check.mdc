@@ -14,6 +14,11 @@ globs:
 
 You are editing a dependency file. Verify every package change.
 
+## Hard gate
+- No install/update recommendation without a verified version.
+- If no reliable source is found, mark the dependency decision as UNVERIFIED.
+- This protocol must be applied together with `research-first.mdc` for architecture/package choices.
+
 ## Before adding or updating any package:
 
 ### 1. Check current version
@@ -42,3 +47,8 @@ Search: "[package-name] bundlephobia"
 
 ### 6. Output
 State clearly: package + version, why over alternatives, caveats, install command.
+
+### 7. Minimum evidence required
+- At least 2 sources per new dependency (official docs + one independent source).
+- One concrete reason for choosing this dependency over the top alternative.
+- One concrete risk/caveat for future maintainers.

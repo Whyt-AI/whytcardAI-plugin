@@ -103,6 +103,24 @@ Never minimize a problem. Never invent positives.
 - If documentation tools/WebSearch return no results, say so — don't fill the gap with assumptions
 - Prefer "I don't know, let me check" over confident wrong answers
 
+## Project knowledge base: .whytcard/
+
+All project documentation, brainstorms, plans, logs, reviews, and research live in `.whytcard/` at the project root. This is the canonical output directory for every command.
+
+**On every task start:**
+1. Check if `.whytcard/` exists. If not, initialize it (wc-setup).
+2. Read `.whytcard/index.md` to understand current project state.
+3. Check `.whytcard/research/` for existing findings before researching from scratch.
+
+**On every output:**
+- Brainstorms → `.whytcard/brainstorms/`
+- Plans → `.whytcard/plans/`
+- Execution logs → `.whytcard/logs/`
+- Reviews → `.whytcard/reviews/`
+- Research findings → `.whytcard/research/`
+- Session context → `.whytcard/context/`
+- Always update `.whytcard/index.md` after creating or modifying any file.
+
 <!-- CORE_PRINCIPLES_END — Everything above is injected at session start. Everything below is loaded on-demand via wc-dispatch skill. -->
 
 ---
@@ -113,15 +131,16 @@ Before acting on any task, match the user's request against this table and invok
 
 | Signal in request | Plugin / Skill / Tool | Fallback (if plugin not installed) |
 |---|---|---|
+| Setup, initialize, "first time" | Skill: `wc-setup` | Create .whytcard/ knowledge base. Detect project, create structure, generate index.md. |
 | UI, component, page, visual, design | Skill: `frontend-design` | Apply UX-first principles (Section 5) manually. Research design patterns via WebSearch. |
 | After any UI change | Browser screenshot tool (3 viewports: 375/768/1440px) | Use any available screenshot tool. If none, ask user to verify visually. |
 | Research, docs, "how does X work" | Documentation lookup tools + WebSearch | Use WebSearch to find official documentation directly. |
 | Research any topic | WebSearch (dual-angle: good query + bad query) | Built-in — always available. |
-| Brainstorm, ideate, explore options, "what if", "should we" | Skill: `wc-brainstorm` | Challenge assumptions, research dual-angle live, generate 3+ approaches, stress-test, create wc-brainstorm-{subject}-{date}-{time}.md |
-| Plan, architect, spec, "how do we build this" | Skill: `wc-plan` | Read brainstorm, verify decisions, architect A-Z, generate HTML visual templates, define increments, write wc-plan-{project}-{date}.md |
-| Build, execute, implement, "start building" | Skill: `wc-execute` | Read plan, build increment by increment, verify after each, log progress in wc-execution-log-{project}-{date}.md, run wc-review on completion |
-| Review, audit, quality gate, "ready to ship?" | Skill: `wc-review` | 8-pass gate (plan, code, visual, a11y, i18n, perf, security, tests), produce wc-review-{project}-{date}.md with SHIP/NOT READY verdict |
-| Feature, multi-step task | Skill: `wc-brainstorm` then `wc-plan` | Brainstorm first, then plan. Write structured docs: goals, constraints, approach, risks, steps. |
+| Brainstorm, ideate, explore options, "what if", "should we" | Skill: `wc-brainstorm` | Challenge assumptions, research live, 3+ approaches, output to .whytcard/brainstorms/ |
+| Plan, architect, spec, "how do we build this" | Skill: `wc-plan` | Read brainstorm, verify decisions, architect A-Z, visual templates, output to .whytcard/plans/ |
+| Build, execute, implement, "start building" | Skill: `wc-execute` | Read plan, build increment by increment, verify, log to .whytcard/logs/, review on completion |
+| Review, audit, quality gate, "ready to ship?" | Skill: `wc-review` | 8-pass gate (plan, code, visual, a11y, i18n, perf, security, tests), output to .whytcard/reviews/ |
+| Feature, multi-step task | Skill: `wc-brainstorm` then `wc-plan` | Brainstorm first, then plan. All output in .whytcard/. |
 | Code review, PR review | Skill: `wc-review` | Review: correctness, edge cases, security, performance, readability. |
 | Stripe, payments, billing | Skill: `stripe:stripe-best-practices` | WebSearch for official Stripe docs and current best practices. |
 | Deploy, ship, production | Skill: `wc-review` then deploy | Run wc-review first. Build, verify no errors/warnings, check environment variables, then deploy. |

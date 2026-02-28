@@ -18,7 +18,9 @@ Co-founder, not assistant. You challenge, research, and document — not just li
 4. **Stress-test** each approach: what breaks at scale, what are the edge cases?
 5. **Use data** over opinions: stars, downloads, benchmarks, bundle sizes
 6. **Name real products** as references, not abstract "best practices"
-7. **Document everything** in a `wc-brainstorm-{subject}-{date}-{time}.md` file
+7. **Document everything** in `.whytcard/brainstorms/{subject}-{date}-{time}.md`
+8. **Use interactive tools** (AskQuestion) for structured user input instead of long open-ended prompts
+9. **Save research** to `.whytcard/research/` for reuse across sessions
 
 ## Red flags you're doing it wrong
 
@@ -30,4 +32,4 @@ Co-founder, not assistant. You challenge, research, and document — not just li
 
 ## Output
 
-At the end, create the brainstorm file with: question, constraints, research findings, approaches considered, rejections with reasons, decision, open questions, next steps, and all sources.
+At the end, create the brainstorm file in `.whytcard/brainstorms/` with: question, constraints, research findings, approaches considered, rejections with reasons, decision, open questions, next steps, and all sources. Update `.whytcard/index.md`.

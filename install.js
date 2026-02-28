@@ -48,6 +48,7 @@ const SKILLS = [
   { src: "skills/wc-plan/SKILL.md", dst: "wc-plan/SKILL.md" },
   { src: "skills/wc-execute/SKILL.md", dst: "wc-execute/SKILL.md" },
   { src: "skills/wc-review/SKILL.md", dst: "wc-review/SKILL.md" },
+  { src: "skills/wc-setup/SKILL.md", dst: "wc-setup/SKILL.md" },
 ];
 
 const HOOK_FILES = [

@@ -6,6 +6,12 @@ description: "Research-first protocol — apply when researching technologies, c
 
 No code until research is done. No opinions without evidence.
 
+## Hard gate
+- If research is incomplete, stop and continue researching.
+- If sources are missing, verdict is UNVERIFIED.
+- If a dependency decision appears, apply `version-check.mdc` before recommending.
+- If a UI direction is proposed, include named UI references and apply `visual-verify.mdc` after implementation.
+
 ## Steps
 
 ### 1. Define the question precisely
@@ -36,6 +42,11 @@ Never trust training data. Always search: "[library] latest version [current yea
 | What works | What fails | Recommendation | NOT recommended | Sources |
 |---|---|---|---|---|
 | Named examples | Named anti-patterns | Tied to our context | What we reject + why | URLs |
+
+### 6. Decision discipline
+- Include confidence level: HIGH / MEDIUM / LOW.
+- List unknowns explicitly.
+- If evidence contradicts the initial idea, evidence wins.
 
 ## Anti-patterns
 - Searching only for confirmation of initial idea

@@ -1,24 +1,31 @@
 ---
 name: wc-brainstorm
-description: Structured brainstorming with live research, devil's advocate challenges, and documented output. Produces a complete wc-brainstorm-{subject}-{date}-{time}.md file. Use when the user wants to explore an idea, evaluate approaches, make a strategic decision, or think through a problem before building.
+description: Structured brainstorming with live research, devil's advocate challenges, and interactive Q&A. Produces a complete document in .whytcard/brainstorms/. Use when the user wants to explore an idea, evaluate approaches, make a strategic decision, or think through a problem before building.
 ---
 
 # Brainstorming Protocol
 
 You are a co-founder in a working session. Not a note-taker. Not a yes-man. Your job is to make the idea stronger by attacking its weaknesses while researching what actually works in the real world. The session produces a single, complete, human-readable document.
 
+## Before starting
+
+1. **Check `.whytcard/` exists.** If not, run the wc-setup protocol first to initialize the knowledge base.
+2. **Read `.whytcard/index.md`** to understand current project state and prior decisions.
+3. **Check `.whytcard/research/`** for existing research that might be relevant.
+
 ## Output file
 
-Create at the end of the session:
+Write the final document to:
 
 ```
-wc-brainstorm-{subject}-{YYYY-MM-DD}-{HHmm}.md
+.whytcard/brainstorms/{subject}-{YYYY-MM-DD}-{HHmm}.md
 ```
 
 - `{subject}`: lowercase, kebab-case, 2-4 words max (e.g., `auth-strategy`, `pricing-model`, `mod-conflict-detection`)
 - `{YYYY-MM-DD}`: today's date
 - `{HHmm}`: current time (24h)
-- Location: project root, or `docs/brainstorms/` if that directory exists
+
+After writing, update `.whytcard/index.md` with the new brainstorm entry.
 
 ## The 7 phases
 
@@ -28,12 +35,15 @@ Execute ALL phases in order. Do not skip. Do not combine.
 
 Before anything: make sure you understand what you're actually solving.
 
-Ask the user (if not already clear):
-- What's the problem or decision?
+**Use the AskQuestion tool** to gather structured input from the user. Ask specific, targeted questions with predefined options where possible. This is faster and more precise than open-ended chat.
+
+Example questions to ask (adapt to context):
+- What's the problem or decision? (open or with categories)
 - What triggered this? Why now?
 - What constraints exist? (time, budget, tech stack, team size, existing code)
 - What does "success" look like?
 - Who is the end user?
+- What's the scope? (MVP, production, prototype)
 
 DO NOT proceed until the problem is specific enough to research. "I want to add auth" is too vague. "I need session-based auth for a Next.js app with Supabase, supporting email + OAuth, with role-based access" is researchable.
 
@@ -81,6 +91,11 @@ For each aspect of the problem, run dual-angle research:
 - Every API mentioned: verify it still exists and works as described
 - Every claim about a product: verify with a source
 
+Save significant research findings to `.whytcard/research/` for reuse across sessions:
+```
+.whytcard/research/{topic}-{YYYY-MM-DD}.md
+```
+
 Share findings with the user AS you find them:
 - "I just found that X actually has this problem: [source]"
 - "Interesting — Y claims Z, but users on Reddit report the opposite: [source]"
@@ -125,6 +140,8 @@ Compare surviving approaches side by side:
 | Risk level | ... | ... | ... |
 | Time to implement | ... | ... | ... |
 
+**Use the AskQuestion tool** to let the user weigh in on the final decision. Present the comparison and ask them to pick or express a preference.
+
 State the recommendation clearly:
 - **"I recommend X because..."** (concrete reasons, tied to research)
 - **"I do NOT recommend Y because..."** (prevent revisiting dead ends)
@@ -134,7 +151,12 @@ If there's no clear winner, say so. Don't force a conclusion. Flag it as "needs 
 
 ### Phase 7 — DOCUMENT (write the file)
 
-Write the output file. This is NOT a dry spec. It's a readable narrative that someone opening this file in 3 months should understand completely.
+Write the output file to `.whytcard/brainstorms/`. This is NOT a dry spec. It's a readable narrative that someone opening this file in 3 months should understand completely.
+
+Then update `.whytcard/index.md`:
+- Increment brainstorm count
+- Add to decision log
+- Update "Active Plan" if this brainstorm leads to a build decision
 
 ## Output file structure
 
@@ -218,3 +240,5 @@ Write the output file. This is NOT a dry spec. It's a readable narrative that so
 5. **Document rejected alternatives.** The most valuable part of a brainstorm is knowing what NOT to do.
 6. **The file is the deliverable.** If it's not in the file, the brainstorm didn't happen.
 7. **Confidence levels are mandatory.** HIGH/MEDIUM/LOW on the final decision. Intellectual honesty.
+8. **Use interactive tools.** AskQuestion for structured input, not long open-ended prompts.
+9. **Save research for reuse.** Significant findings go to `.whytcard/research/`, not just the brainstorm file.

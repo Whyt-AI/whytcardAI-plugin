@@ -11,6 +11,8 @@ const { handleStdin, injectContext, emptyResponse } = require("./lib/output");
 
 // Keyword → dispatch hint mapping
 const DISPATCH_RULES = [
+  [/\b(setup|init\w*|\.whytcard)\b/i,
+    "WC-DISPATCH: Setup detected → invoke wc-setup skill. Initialize .whytcard/ knowledge base in the project."],
   [/\b(ui|component|page|visual|design|layout|style|theme)\b/i,
     "WC-DISPATCH: UI task detected → invoke wc-visual-verify skill after changes. Take screenshots at 3 viewports."],
   [/\b(research|compare|evaluate|which|best|alternative|recommend|pros.?cons|trade.?off)\b/i,
@@ -30,13 +32,13 @@ const DISPATCH_RULES = [
   [/\b(accessib\w*|a11y|wcag|screen.?reader|aria|focus)\b/i,
     "WC-DISPATCH: Accessibility task detected → verify semantic HTML, ARIA, keyboard nav, contrast AA, prefers-reduced-motion."],
   [/\b(plan|spec|architect|rfc)\b/i,
-    "WC-DISPATCH: Planning task detected → invoke wc-plan skill. Read brainstorm first, verify decisions, architect A-Z, generate visual HTML templates, define increments."],
+    "WC-DISPATCH: Planning task detected → invoke wc-plan skill. Read brainstorm from .whytcard/, verify decisions, architect A-Z."],
   [/\b(brainstorm\w*|ideate?\b|explor\w+\s+(?:idea|option|approach|solution)|think\s+through|weigh\s+(?:option|approach)|let'?s\s+think|on\s+(?:r[eé]fl[eé]chit?|pense)|what\s+(?:if|about)|should\s+(?:we|i)\s+(?:use|go\s+with|pick|choose))\b/i,
-    "WC-DISPATCH: Brainstorming detected → invoke wc-brainstorm skill. Challenge assumptions, research live, generate 3+ approaches, produce wc-brainstorm-{subject}-{date}-{time}.md file."],
+    "WC-DISPATCH: Brainstorming detected → invoke wc-brainstorm skill. Challenge assumptions, research live, output to .whytcard/brainstorms/."],
   [/\b(build|execut\w+|implement|construct|cr[eé]\w+\s+(?:le|the)\s+proje[ct]|go\s+build|start\s+(?:building|coding|implementing))\b/i,
-    "WC-DISPATCH: Execution detected → invoke wc-execute skill. Read the plan, build increment by increment, verify after each, log progress."],
+    "WC-DISPATCH: Execution detected → invoke wc-execute skill. Read plan from .whytcard/plans/, build increment by increment, log to .whytcard/logs/."],
   [/\b(review|audit|quality|ship|ready\s+(?:to|for)\s+(?:ship|prod|deploy|launch)|final\s+check)\b/i,
-    "WC-DISPATCH: Review task detected → invoke wc-review skill. 8-pass quality gate: plan compliance, code, visual, a11y, i18n, perf, security, tests. Verdict: SHIP or NOT READY."],
+    "WC-DISPATCH: Review task detected → invoke wc-review skill. 8-pass quality gate, output to .whytcard/reviews/."],
 ];
 
 handleStdin((data) => {

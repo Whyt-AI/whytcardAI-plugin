@@ -1,39 +1,41 @@
 ---
 name: wc-plan
-description: Creates a complete A-Z implementation plan from brainstorm output. Re-runs research, version checks, and visual verification to confirm decisions. Generates HTML visual templates showing multiple style directions. Produces a wc-plan-{project}-{date}.md and companion visual files. Use after brainstorming, before building.
+description: Creates a complete A-Z implementation plan from brainstorm output. Re-runs research and version checks to confirm decisions. Generates HTML visual templates showing multiple style directions. Produces plan files in .whytcard/plans/. Use after brainstorming, before building.
 ---
 
 # Planning Protocol
 
 You are turning a brainstorm into a buildable blueprint. This is the bridge between "we decided X" and "here's exactly how we build X." The plan must be complete enough that execution is mechanical — no design decisions left open.
 
-## Inputs
+## Before starting
 
-Before starting, locate and read:
-1. The brainstorm file (`wc-brainstorm-*.md`) — this is the source of truth for decisions
-2. Any existing codebase context (package.json, file structure, existing code)
-3. The project's tech stack (from session-start hook or manual detection)
+1. **Check `.whytcard/` exists.** If not, run the wc-setup protocol first.
+2. **Read `.whytcard/index.md`** for current project state.
+3. **Read the brainstorm** from `.whytcard/brainstorms/` — this is the source of truth for decisions.
+4. **Check `.whytcard/research/`** for existing research findings.
+5. **Read existing codebase context** (package.json, file structure, existing code).
 
-If no brainstorm file exists, tell the user to run `/wc-brainstorm` first. Do not plan without a brainstorm.
+If no brainstorm file exists, tell the user to run `/brainstorm` first. Do not plan without a brainstorm.
 
 ## Output files
 
 ### Main plan
 ```
-wc-plan-{project}-{YYYY-MM-DD}.md
+.whytcard/plans/{project}-{YYYY-MM-DD}.md
 ```
 
 ### Visual templates (if the project has UI)
 ```
-wc-plan-{project}-visuals/
-├── style-a.html    ← self-contained, openable in browser
+.whytcard/plans/{project}-visuals/
+├── style-a.html
 ├── style-b.html
-├── style-c.html    ← optional third direction
-└── README.md       ← explains each style, how to preview
+├── style-c.html   (optional)
+└── README.md
 ```
 
 - `{project}`: kebab-case, 2-4 words
-- Location: project root, or `docs/plans/` if that directory exists
+
+After writing, update `.whytcard/index.md`.
 
 ## The 6 phases
 
@@ -105,9 +107,9 @@ Each HTML file must be:
 - Professional quality — this is what the user will judge the project by
 
 Each style direction should be genuinely different:
-- **Style A**: [describe the aesthetic — e.g., "minimal, lots of whitespace, monochrome with one accent"]
-- **Style B**: [different aesthetic — e.g., "dense, data-rich, dark theme with neon accents"]
-- **Style C**: [optional third direction — e.g., "warm, approachable, rounded corners, earth tones"]
+- **Style A**: [describe the aesthetic]
+- **Style B**: [different aesthetic]
+- **Style C**: [optional third direction]
 
 The `README.md` in the visuals folder explains:
 - How to preview (just open in browser)
@@ -115,7 +117,7 @@ The `README.md` in the visuals folder explains:
 - Key differences between them
 - Which the agent recommends and why
 
-**After generating, ask the user to pick** before proceeding. The chosen style becomes the design spec for execution.
+**After generating, use the AskQuestion tool** to let the user pick a style before proceeding. The chosen style becomes the design spec for execution.
 
 ### Phase 4 — PLAN INCREMENTS (build order)
 
@@ -140,20 +142,6 @@ Format for each increment:
 **Estimated scope**: {S/M/L}
 ```
 
-Typical increment order:
-1. Project setup (deps, config, structure)
-2. Data layer (database, schemas, types)
-3. Core logic (business rules, utilities)
-4. API layer (routes, handlers, middleware)
-5. UI foundation (layout, navigation, theming)
-6. Feature increments (one per feature)
-7. Integration (connecting all pieces)
-8. Polish (animations, loading states, error handling)
-9. Testing (unit, integration, e2e)
-10. i18n, accessibility, responsive
-11. Performance optimization
-12. Final review and cleanup
-
 ### Phase 5 — RISK REGISTER
 
 Identify what could go wrong during execution:
@@ -162,80 +150,14 @@ Identify what could go wrong during execution:
 |---|---|---|---|
 | {specific risk} | LOW/MED/HIGH | LOW/MED/HIGH | {concrete action} |
 
-Focus on:
-- Technical risks (API changes, compatibility issues, performance bottlenecks)
-- Scope risks (features more complex than estimated)
-- Dependency risks (package deprecation, breaking changes)
-- Integration risks (parts that don't fit together)
-
 ### Phase 6 — DOCUMENT
 
-Write the plan file. It must be complete enough that someone (or an AI) can execute it without asking questions.
+Write the plan file to `.whytcard/plans/`. It must be complete enough that someone (or an AI) can execute it without asking questions.
 
-## Plan file structure
-
-```markdown
-# Plan: {Project Name}
-
-**Date**: {YYYY-MM-DD}
-**Based on**: wc-brainstorm-{subject}-{date}.md
-**Status**: {DRAFT | APPROVED | IN PROGRESS | COMPLETED}
-**Chosen visual style**: {A/B/C} (if applicable)
-
----
-
-## Overview
-
-{What we're building, in 2-3 sentences. Written for someone who hasn't read the brainstorm.}
-
-## Tech Stack (verified)
-
-| Technology | Version | Purpose | Verified |
-|---|---|---|---|
-| {tech} | {exact version} | {why} | {date checked} |
-
-## Architecture
-
-### Project Structure
-{complete file tree}
-
-### Data Model
-{tables, fields, relationships}
-
-### API Surface
-{endpoints with shapes}
-
-### State Management
-{client vs server, caching}
-
-## Visual Direction
-
-{Which style was chosen and why. Reference the HTML template files.}
-
-## Increments
-
-### Increment 1: {name}
-{full increment detail as defined in Phase 4}
-
-### Increment 2: {name}
-...
-
-## Risk Register
-
-{table from Phase 5}
-
-## Verification Criteria
-
-{How we know the project is done. Concrete, measurable.}
-
-## Open Items
-
-{Anything that needs user input before execution can start.}
-
-## Sources
-
-{All URLs consulted during planning.}
-```
+Update `.whytcard/index.md`:
+- Increment plan count
+- Set "Active Plan" to point to this plan
+- Add to decision log
 
 ## Critical rules
 
@@ -243,4 +165,4 @@ Write the plan file. It must be complete enough that someone (or an AI) can exec
 2. **Every technology is version-pinned and verified.** No "latest" — exact version numbers, checked live.
 3. **Visual templates are real.** Not wireframes, not mockups. Actual HTML the user can open and evaluate.
 4. **Increments are executable.** Each one has files, criteria, and verification. No vague "implement feature X."
-5. **The user approves before execution.** The plan is a proposal. `/wc-execute` only starts after explicit approval.
+5. **The user approves before execution.** The plan is a proposal. `/execute` only starts after explicit approval.

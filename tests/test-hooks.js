@@ -296,6 +296,7 @@ const dispatchCases = [
   ["Add translations for settings", "i18n task"],
   ["Check accessibility of the form", "Accessibility task"],
   ["Write the architecture spec", "Planning task"],
+  ["Initialize the project setup", "Setup detected"],
 ];
 
 for (const [prompt, expectedFragment] of dispatchCases) {
@@ -509,13 +510,17 @@ const requiredFiles = [
   "skills/wc-visual-verify/SKILL.md",
   "skills/wc-research-first/SKILL.md",
   "skills/wc-version-check/SKILL.md",
+  "skills/wc-setup/SKILL.md",
   "commands/brainstorm.md",
   "commands/plan.md",
   "commands/execute.md",
   "commands/review.md",
+  "commands/setup.md",
   "commands/quality-gate.md",
   "commands/research.md",
   "commands/verify-visual.md",
+  ".github/agents/whytcard-ai.agent.md",
+  ".github/copilot-instructions.md",
   "agents/wc-quality-gate/AGENT.md",
   "README.md",
 ];

@@ -19,6 +19,11 @@ globs:
 
 This file is being edited — visual verification is MANDATORY.
 
+## Hard gate
+- No "done" status for UI work without visual proof.
+- If browser/screenshot tooling is unavailable, explicitly request manual verification from the user using this checklist.
+- If any viewport fails, verdict is NOT READY.
+
 ## After completing this edit:
 
 1. **Screenshots at 3 viewports**
@@ -45,6 +50,10 @@ This file is being edited — visual verification is MANDATORY.
    - Animations respect prefers-reduced-motion
 
 5. **Verdict**: READY (all pass) or NOT READY (list issues with file:line)
+
+6. **Evidence log**
+   - List screenshot filenames or capture identifiers used for review
+   - Record final verdict and unresolved issues (if any)
 
 ## Fix escalation order
 1. Adjust value (size, color, spacing)
