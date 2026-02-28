@@ -14,6 +14,7 @@ Turns your AI coding assistant into a disciplined co-founder CTO that:
 - **Researches both sides** — good AND bad, with named examples and real data
 - **Brainstorms like a co-founder** — challenges ideas, researches live, documents everything
 - **Maintains a project knowledge base** — `.whytcard/` stores all context across sessions
+- **Auto-onboards on new repos** — detects missing knowledge base and guides one-time configuration (global vs local)
 
 ## The Pipeline
 
