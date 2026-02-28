@@ -11,14 +11,16 @@ const { handleStdin, injectContext, emptyResponse } = require("./lib/output");
 
 // Keyword → dispatch hint mapping
 const DISPATCH_RULES = [
+  [/\b(orchestrator|orchestrat\w+|end[\s-]?to[\s-]?end|e2e|from\s+scratch|build\s+(?:an|a)\s+(?:app|tool|system)|je\s+veux\s+un\s+outil|projet\s+complet)\b/i,
+    "WC-DISPATCH: End-to-end build request detected → invoke wc-Whytcard_orchestrator. One command runs setup → brainstorm → plan → execute → review."],
   [/\b(setup|init\w*|\.whytcard)\b/i,
-    "WC-DISPATCH: Setup detected → invoke wc-setup skill. Initialize .whytcard/ knowledge base in the project."],
+    "WC-DISPATCH: Setup detected → invoke wc-1_setup. Initialize .whytcard/ knowledge base in the project."],
   [/\b(ui|component|page|visual|design|layout|style|theme)\b/i,
-    "WC-DISPATCH: UI task detected → invoke wc-visual-verify skill after changes. Take screenshots at 3 viewports."],
+    "WC-DISPATCH: UI task detected → visual verification required after changes (3 viewports). If installed, use wc-visual-verify; otherwise follow the visual-verify rule."],
   [/\b(research|compare|evaluate|which|best|alternative|recommend|pros.?cons|trade.?off)\b/i,
-    "WC-DISPATCH: Research task detected → invoke wc-research-first skill. Dual-angle research required (good + bad)."],
+    "WC-DISPATCH: Research task detected → dual-angle research required (good + bad). If installed, use wc-research-first."],
   [/\b(install|add|package|dependency|npm|pnpm|bun|pip)\b/i,
-    "WC-DISPATCH: Package task detected → invoke wc-version-check skill. Verify latest version via WebSearch before installing."],
+    "WC-DISPATCH: Package task detected → verify latest versions via WebSearch before installing. If installed, use wc-version-check."],
   [/\b(bug|error|broken|failing|crash|fix|debug)\b/i,
     "WC-DISPATCH: Bug/debug task detected → debug systematically: reproduce, hypothesize, instrument, verify, fix, re-verify."],
   [/\b(deploy|ship|production|release|publish)\b/i,
@@ -32,13 +34,13 @@ const DISPATCH_RULES = [
   [/\b(accessib\w*|a11y|wcag|screen.?reader|aria|focus)\b/i,
     "WC-DISPATCH: Accessibility task detected → verify semantic HTML, ARIA, keyboard nav, contrast AA, prefers-reduced-motion."],
   [/\b(plan|spec|architect|rfc)\b/i,
-    "WC-DISPATCH: Planning task detected → invoke wc-plan skill. Read brainstorm from .whytcard/, verify decisions, architect A-Z."],
+    "WC-DISPATCH: Planning task detected → invoke wc-3_plan. Read brainstorm from .whytcard/, verify decisions, architect A-Z."],
   [/\b(brainstorm\w*|ideate?\b|explor\w+\s+(?:idea|option|approach|solution)|think\s+through|weigh\s+(?:option|approach)|let'?s\s+think|on\s+(?:r[eé]fl[eé]chit?|pense)|what\s+(?:if|about)|should\s+(?:we|i)\s+(?:use|go\s+with|pick|choose))\b/i,
-    "WC-DISPATCH: Brainstorming detected → invoke wc-brainstorm skill. Challenge assumptions, research live, output to .whytcard/brainstorms/."],
+    "WC-DISPATCH: Brainstorming detected → invoke wc-2_brainstorm. Challenge assumptions, research live, output to .whytcard/brainstorms/."],
   [/\b(build|execut\w+|implement|construct|cr[eé]\w+\s+(?:le|the)\s+proje[ct]|go\s+build|start\s+(?:building|coding|implementing))\b/i,
-    "WC-DISPATCH: Execution detected → invoke wc-execute skill. Read plan from .whytcard/plans/, build increment by increment, log to .whytcard/logs/."],
+    "WC-DISPATCH: Execution detected → invoke wc-4_execute. Read plan from .whytcard/plans/, build increment by increment, log to .whytcard/logs/."],
   [/\b(review|audit|quality|ship|ready\s+(?:to|for)\s+(?:ship|prod|deploy|launch)|final\s+check)\b/i,
-    "WC-DISPATCH: Review task detected → invoke wc-review skill. 8-pass quality gate, output to .whytcard/reviews/."],
+    "WC-DISPATCH: Review task detected → invoke wc-5_review. 8-pass quality gate, output to .whytcard/reviews/."],
 ];
 
 handleStdin((data) => {

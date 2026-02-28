@@ -9,6 +9,7 @@
  *   node install.js              Interactive install
  *   node install.js --uninstall  Interactive uninstall
  *   node install.js --force      Install without prompts
+ *   node install.js --advanced   Also install optional + legacy skills
  *   node install.js --status     Show what's installed
  */
 
@@ -39,17 +40,34 @@ const RULES = [
   { src: "rules/execution-tracking.mdc", dst: "wc-execution-tracking.mdc" },
 ];
 
-const SKILLS = [
+// Skills installed by default (minimal, ordered pipeline + orchestrator)
+const CORE_SKILLS = [
+  { src: "skills/wc-1_setup/SKILL.md", dst: "wc-1_setup/SKILL.md" },
+  { src: "skills/wc-2_brainstorm/SKILL.md", dst: "wc-2_brainstorm/SKILL.md" },
+  { src: "skills/wc-3_plan/SKILL.md", dst: "wc-3_plan/SKILL.md" },
+  { src: "skills/wc-4_execute/SKILL.md", dst: "wc-4_execute/SKILL.md" },
+  { src: "skills/wc-5_review/SKILL.md", dst: "wc-5_review/SKILL.md" },
+  { src: "skills/wc-Whytcard_orchestrator/SKILL.md", dst: "wc-Whytcard_orchestrator/SKILL.md" },
+];
+
+// Optional extra skills (installs more commands; opt-in via --advanced)
+const ADVANCED_SKILLS = [
   { src: "skills/wc-dispatch/SKILL.md", dst: "wc-dispatch/SKILL.md" },
   { src: "skills/wc-visual-verify/SKILL.md", dst: "wc-visual-verify/SKILL.md" },
   { src: "skills/wc-research-first/SKILL.md", dst: "wc-research-first/SKILL.md" },
   { src: "skills/wc-version-check/SKILL.md", dst: "wc-version-check/SKILL.md" },
+];
+
+// Legacy pipeline skills (kept for backward compatibility; opt-in via --advanced)
+const LEGACY_SKILLS = [
+  { src: "skills/wc-setup/SKILL.md", dst: "wc-setup/SKILL.md" },
   { src: "skills/wc-brainstorm/SKILL.md", dst: "wc-brainstorm/SKILL.md" },
   { src: "skills/wc-plan/SKILL.md", dst: "wc-plan/SKILL.md" },
   { src: "skills/wc-execute/SKILL.md", dst: "wc-execute/SKILL.md" },
   { src: "skills/wc-review/SKILL.md", dst: "wc-review/SKILL.md" },
-  { src: "skills/wc-setup/SKILL.md", dst: "wc-setup/SKILL.md" },
 ];
+
+const ALL_SKILLS = [...CORE_SKILLS, ...ADVANCED_SKILLS, ...LEGACY_SKILLS];
 
 const HOOK_FILES = [
   "constitution.md",
@@ -155,7 +173,7 @@ function getStatus() {
     if (fs.existsSync(dst)) status.rules.push(rule.dst);
   }
 
-  for (const skill of SKILLS) {
+  for (const skill of ALL_SKILLS) {
     const dst = path.join(TARGETS.skills, skill.dst);
     if (fs.existsSync(dst)) status.skills.push(skill.dst);
   }
@@ -173,7 +191,7 @@ function getStatus() {
 
 function showStatus() {
   const status = getStatus();
-  const total = RULES.length + SKILLS.length + 2; // +2 for hooks + plugin
+  const total = RULES.length + ALL_SKILLS.length + 2; // +2 for hooks + plugin
   const installed =
     status.rules.length + status.skills.length + (status.hooks ? 1 : 0) + (status.plugin ? 1 : 0);
 
@@ -186,8 +204,22 @@ function showStatus() {
     installed ? ok(rule.dst) : skip(`${rule.dst} (not installed)`);
   }
 
-  log(`\n  ${c.bold}Skills${c.reset} (${status.skills.length}/${SKILLS.length}):`);
-  for (const skill of SKILLS) {
+  const countInstalled = (list) => list.filter((s) => status.skills.includes(s.dst)).length;
+
+  log(`\n  ${c.bold}Skills (core)${c.reset} (${countInstalled(CORE_SKILLS)}/${CORE_SKILLS.length}):`);
+  for (const skill of CORE_SKILLS) {
+    const installed = status.skills.includes(skill.dst);
+    installed ? ok(skill.dst) : skip(`${skill.dst} (not installed)`);
+  }
+
+  log(`\n  ${c.bold}Skills (optional: --advanced)${c.reset} (${countInstalled(ADVANCED_SKILLS)}/${ADVANCED_SKILLS.length}):`);
+  for (const skill of ADVANCED_SKILLS) {
+    const installed = status.skills.includes(skill.dst);
+    installed ? ok(skill.dst) : skip(`${skill.dst} (not installed)`);
+  }
+
+  log(`\n  ${c.bold}Skills (legacy: --advanced)${c.reset} (${countInstalled(LEGACY_SKILLS)}/${LEGACY_SKILLS.length}):`);
+  for (const skill of LEGACY_SKILLS) {
     const installed = status.skills.includes(skill.dst);
     installed ? ok(skill.dst) : skip(`${skill.dst} (not installed)`);
   }
@@ -221,10 +253,10 @@ function installRules() {
   return count;
 }
 
-function installSkills() {
+function installSkills(skillsToInstall) {
   ensureDir(TARGETS.skills);
   let count = 0;
-  for (const skill of SKILLS) {
+  for (const skill of skillsToInstall) {
     const src = path.join(PLUGIN_ROOT, skill.src);
     const dst = path.join(TARGETS.skills, skill.dst);
     if (!fs.existsSync(src)) {
@@ -236,6 +268,19 @@ function installSkills() {
     count++;
   }
   return count;
+}
+
+function removeSkills(skillsToRemove) {
+  let removed = 0;
+  for (const skill of skillsToRemove) {
+    const dst = path.join(TARGETS.skills, skill.dst);
+    if (removeFile(dst)) {
+      ok(`Removed skill: ${skill.dst}`);
+      removed++;
+    }
+    removeDirIfEmpty(path.dirname(dst));
+  }
+  return removed;
 }
 
 function installPluginFiles() {
@@ -288,7 +333,7 @@ function installHooks() {
   ok("Hooks: merged into global hooks.json");
 }
 
-async function install(force) {
+async function install(force, advanced) {
   header("WhytCard AI Plugin — Global Installation");
   log("");
   log(`  This will install the plugin globally into:`);
@@ -296,9 +341,12 @@ async function install(force) {
   log("");
   log(`  Components:`);
   log(`    ${c.cyan}${RULES.length}${c.reset} rules   -> ${c.dim}${TARGETS.rules}${c.reset}`);
-  log(`    ${c.cyan}${SKILLS.length}${c.reset} skills  -> ${c.dim}${TARGETS.skills}${c.reset}`);
+  const skillsToInstall = advanced ? [...CORE_SKILLS, ...ADVANCED_SKILLS, ...LEGACY_SKILLS] : CORE_SKILLS;
+  log(`    ${c.cyan}${skillsToInstall.length}${c.reset} skills  -> ${c.dim}${TARGETS.skills}${c.reset}`);
   log(`    ${c.cyan}${HOOK_FILES.length}${c.reset} files   -> ${c.dim}${TARGETS.plugin}${c.reset}`);
   log(`    ${c.cyan}4${c.reset} hooks   -> ${c.dim}${TARGETS.hooksFile}${c.reset}`);
+  log("");
+  log(`  Mode: ${c.bold}${advanced ? "advanced" : "minimal"}${c.reset}`);
   log("");
 
   // Check for existing installation
@@ -321,7 +369,10 @@ async function install(force) {
   header("Installing...");
 
   const rules = installRules();
-  const skills = installSkills();
+  const skills = installSkills(skillsToInstall);
+  if (!advanced) {
+    removeSkills([...ADVANCED_SKILLS, ...LEGACY_SKILLS]);
+  }
   const files = installPluginFiles();
   installHooks();
 
@@ -411,7 +462,7 @@ async function uninstall(force) {
     if (removeFile(dst)) ok(`Rule: ${rule.dst}`);
   }
 
-  for (const skill of SKILLS) {
+  for (const skill of ALL_SKILLS) {
     const dst = path.join(TARGETS.skills, skill.dst);
     if (removeFile(dst)) ok(`Skill: ${skill.dst}`);
     const skillDir = path.dirname(dst);
@@ -437,6 +488,7 @@ const args = process.argv.slice(2);
 const isUninstall = args.includes("--uninstall");
 const isForce = args.includes("--force");
 const isStatus = args.includes("--status");
+const isAdvanced = args.includes("--advanced");
 
 if (!fs.existsSync(CURSOR_HOME)) {
   err(`Cursor home not found at ${CURSOR_HOME}`);
@@ -449,5 +501,5 @@ if (isStatus) {
 } else if (isUninstall) {
   uninstall(isForce);
 } else {
-  install(isForce);
+  install(isForce, isAdvanced);
 }
