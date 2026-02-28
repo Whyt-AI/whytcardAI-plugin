@@ -270,6 +270,19 @@ function installSkills(skillsToInstall) {
   return count;
 }
 
+function removeSkills(skillsToRemove) {
+  let removed = 0;
+  for (const skill of skillsToRemove) {
+    const dst = path.join(TARGETS.skills, skill.dst);
+    if (removeFile(dst)) {
+      ok(`Removed skill: ${skill.dst}`);
+      removed++;
+    }
+    removeDirIfEmpty(path.dirname(dst));
+  }
+  return removed;
+}
+
 function installPluginFiles() {
   ensureDir(TARGETS.plugin);
   let count = 0;
@@ -357,6 +370,9 @@ async function install(force, advanced) {
 
   const rules = installRules();
   const skills = installSkills(skillsToInstall);
+  if (!advanced) {
+    removeSkills([...ADVANCED_SKILLS, ...LEGACY_SKILLS]);
+  }
   const files = installPluginFiles();
   installHooks();
 
