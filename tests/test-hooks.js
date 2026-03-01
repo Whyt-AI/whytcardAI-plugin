@@ -384,11 +384,13 @@ test("Cursor hooks.json has version field", () => {
   assertEqual(hooks.version, 1, "Cursor hooks.json should have version: 1");
 });
 
-test("Cursor hooks.json uses camelCase event names", () => {
+test("Cursor hooks.json uses PascalCase event names (same as Claude Code)", () => {
   const hooks = JSON.parse(fs.readFileSync(path.join(ROOT, ".cursor/hooks.json"), "utf8"));
   const events = Object.keys(hooks.hooks);
+  assert(events.length > 0, "Cursor hooks should not be empty");
+  const validEvents = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
   for (const evt of events) {
-    assert(evt[0] === evt[0].toLowerCase(), `${evt} should be camelCase`);
+    assert(validEvents.includes(evt), `${evt} is not a recognized hook event`);
   }
 });
 
