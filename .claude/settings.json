@@ -1,5 +1,4 @@
 {
-  "version": 1,
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/session-init.js",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/hooks/session-init.js\"",
             "timeout": 10
           }
         ]
@@ -19,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CURSOR_PLUGIN_ROOT:-$(cd \"$(dirname \"$0\")/..\" && pwd)}\"/hooks/post-edit-check.js",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/hooks/post-edit-check.js\"",
             "timeout": 5
           }
         ]
