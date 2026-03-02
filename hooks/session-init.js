@@ -21,11 +21,11 @@ const {
 
 const pluginRoot = getPluginRoot();
 const agentsPath = path.join(pluginRoot, "AGENTS.md");
-let principles = "";
+let agentsInstructions = "";
 try {
-  principles = fs.readFileSync(agentsPath, "utf8").trim();
+  agentsInstructions = fs.readFileSync(agentsPath, "utf8").trim();
 } catch (err) {
-  principles = `ERROR: Could not load AGENTS.md — ${err.message}`;
+  agentsInstructions = `ERROR: Could not load AGENTS.md — ${err.message}`;
 }
 
 function detectStack(cwd) {
@@ -155,9 +155,9 @@ function buildOnboardingContext(rootDir) {
   return `\n\n<WC-ONBOARDING>\nAsk the user ONCE (default = GLOBAL):\n1) KB mode: GLOBAL (recommended) or LOCAL\n2) If GLOBAL: global root path (default: ${defaultRoot})\n\nCurrent config: mode=${currentMode}, globalRoot=${resolvedRoot}, config=${cfgPath}\n\nOn choice, ensure:\n- locator: ${path.join(defaultRoot, "locator.json")}\n- config: ${cfgPath} with { version, kbMode, globalRoot, confirmed:true }\n- GLOBAL path: ${globalProjectDir} and link .whytcard -> ${globalDocsDir}\n- LOCAL fallback if linking fails\n\nDetected KB status: ${kbStatus.status}\n</WC-ONBOARDING>`;
 }
 
-const stackLine = stack.length ? `\nDetected stack: ${stack.join(", ")}.` : "";
-const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
+const stackMessage = stack.length ? `\nDetected stack: ${stack.join(", ")}.` : "";
+const configMessage = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
 const onboarding = buildOnboardingContext(projectRoot);
-const context = `<WHYTCARD-AGENTS>\n${principles}${stackLine}${configLine}\n</WHYTCARD-AGENTS>`;
+const context = `<WHYTCARD-AGENTS>\n${agentsInstructions}${stackMessage}${configMessage}\n</WHYTCARD-AGENTS>`;
 
 process.stdout.write(injectContext("SessionStart", context + onboarding));

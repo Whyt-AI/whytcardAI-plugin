@@ -37,7 +37,7 @@ function runHook(hookFile, stdinData) {
   return JSON.parse(result.trim() || "{}");
 }
 
-console.log("\n hooks/lib/output.js");
+console.log("\n## hooks/lib/output.js");
 const lib = require("../hooks/lib/output");
 
 test("detectPlatform returns known value", () => {
@@ -53,7 +53,7 @@ test("isVisualFile rejects TS", () => {
   assert(!lib.isVisualFile("test.ts"), "ts should not be visual");
 });
 
-console.log("\n hooks/session-init.js");
+console.log("\n## hooks/session-init.js");
 
 test("session-init injects SessionStart context", () => {
   const out = JSON.parse(execFileSync("node", [path.join(HOOKS_DIR, "session-init.js")], {
@@ -65,9 +65,11 @@ test("session-init injects SessionStart context", () => {
   assert(out.hookSpecificOutput.hookEventName === "SessionStart", "wrong event");
   assert(out.hookSpecificOutput.additionalContext.includes("WHYTCARD-AGENTS"), "missing tag");
   assert(out.hookSpecificOutput.additionalContext.includes("AGENTS.md"), "should include AGENTS content");
+  assert(out.hookSpecificOutput.additionalContext.includes("How you think (principles)"), "missing core principles section");
+  assert(out.hookSpecificOutput.additionalContext.includes("<WC-ONBOARDING>"), "missing onboarding context");
 });
 
-console.log("\n hooks/post-edit-check.js");
+console.log("\n## hooks/post-edit-check.js");
 
 test("post-edit-check triggers on visual file", () => {
   const out = runHook("post-edit-check.js", { tool_input: { file_path: "App.tsx" } });
@@ -81,7 +83,7 @@ test("post-edit-check ignores non-visual file", () => {
   assert(!out.hookSpecificOutput, "should be empty for non-visual file");
 });
 
-console.log("\n minimal file structure");
+console.log("\n## minimal file structure");
 
 const required = [
   "AGENTS.md",
