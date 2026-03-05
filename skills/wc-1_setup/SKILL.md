@@ -36,7 +36,7 @@ If the user doesn't care, default to **GLOBAL**.
 If GLOBAL, also ask where the global root should live (default: `~/.whytcard`).
 
 Persist the choice in a global config file so future projects are auto-configured by the SessionStart onboarding:
-- `{globalRoot}/config.json` (dynamic path, no hardcoded values)
+- `~/.whytcard/config.json` (the default global root path currently read by SessionStart)
 
 ### 1c) GLOBAL mode project layout (if chosen)
 
