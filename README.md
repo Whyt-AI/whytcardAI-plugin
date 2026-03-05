@@ -4,6 +4,7 @@ WhytCard v3 is a minimal, layered plugin built on:
 
 1. `AGENTS.md` (principle-based always-on instruction)
 2. Two hooks (`session-init`, `post-edit-check`) for deterministic guardrails
+3. Auto-onboarding — detects missing knowledge base and guides one-time configuration (global vs local)
 
 ## Structure
 
