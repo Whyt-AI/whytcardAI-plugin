@@ -8,6 +8,7 @@
 
 const { execFileSync } = require("child_process");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const HOOKS_DIR = path.join(__dirname, "..", "hooks");
@@ -538,8 +539,254 @@ for (const file of requiredFiles) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Summary
+// SECTION 10: hooks/lib/whytcard-kb.js
 // ═══════════════════════════════════════════════════════════════════════
+
+console.log("\n hooks/lib/whytcard-kb.js — KB helpers");
+
+const kb = require("../hooks/lib/whytcard-kb");
+
+function makeTmpDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+}
+
+function rmrf(dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+// ── slugify ──────────────────────────────────────────────────────────
+
+test("slugify: lowercases and replaces spaces with dashes", () => {
+  assertEqual(kb.slugify("Hello World"), "hello-world", "slugify hello world");
+});
+
+test("slugify: strips special characters", () => {
+  assertEqual(kb.slugify("foo/bar@baz"), "foo-bar-baz", "slugify special chars");
+});
+
+test("slugify: empty string returns 'project'", () => {
+  assertEqual(kb.slugify(""), "project", "slugify empty string");
+});
+
+test("slugify: null returns 'project'", () => {
+  assertEqual(kb.slugify(null), "project", "slugify null");
+});
+
+test("slugify: undefined returns 'project'", () => {
+  assertEqual(kb.slugify(undefined), "project", "slugify undefined");
+});
+
+test("slugify: truncates to 60 chars", () => {
+  const result = kb.slugify("a".repeat(100));
+  assertEqual(result.length, 60, "slugify should truncate to 60");
+});
+
+test("slugify: trims leading and trailing dashes", () => {
+  const result = kb.slugify("  --foo--  ");
+  assert(!result.startsWith("-"), "should not start with dash");
+  assert(!result.endsWith("-"), "should not end with dash");
+});
+
+test("slugify: preserves numbers", () => {
+  assertEqual(kb.slugify("my-project-2"), "my-project-2", "slugify should keep numbers");
+});
+
+// ── getDefaultGlobalRoot / getGlobalConfigPath ────────────────────────
+
+test("getDefaultGlobalRoot: returns path under home dir ending with .whytcard", () => {
+  const root = kb.getDefaultGlobalRoot();
+  assert(root.startsWith(os.homedir()), "root should be under home dir");
+  assert(root.endsWith(".whytcard"), "root should end with .whytcard");
+});
+
+test("getGlobalConfigPath: uses provided root", () => {
+  assertEqual(kb.getGlobalConfigPath("/custom/root"), "/custom/root/config.json", "wrong config path");
+});
+
+test("getGlobalConfigPath: defaults to getDefaultGlobalRoot()", () => {
+  const cfgPath = kb.getGlobalConfigPath();
+  assert(cfgPath.endsWith("config.json"), "should end with config.json");
+  assert(cfgPath.includes(".whytcard"), "should include .whytcard");
+});
+
+// ── detectGitRemoteUrl ───────────────────────────────────────────────
+
+test("detectGitRemoteUrl: returns null when no .git directory", () => {
+  const tmp = makeTmpDir();
+  try {
+    assertEqual(kb.detectGitRemoteUrl(tmp), null, "should return null with no .git");
+  } finally { rmrf(tmp); }
+});
+
+test("detectGitRemoteUrl: reads origin URL from .git/config", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp, ".git"));
+    const gitConfig = [
+      "[core]",
+      "\trepositoryformatversion = 0",
+      '[remote "origin"]',
+      "\turl = https://github.com/org/repo.git",
+      "\tfetch = +refs/heads/*:refs/remotes/origin/*",
+    ].join("\n");
+    fs.writeFileSync(path.join(tmp, ".git", "config"), gitConfig);
+    assertEqual(kb.detectGitRemoteUrl(tmp), "https://github.com/org/repo.git", "wrong remote URL");
+  } finally { rmrf(tmp); }
+});
+
+test("detectGitRemoteUrl: returns null when .git/config has no origin", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp, ".git"));
+    fs.writeFileSync(path.join(tmp, ".git", "config"), "[core]\n\trepositoryformatversion = 0\n");
+    assertEqual(kb.detectGitRemoteUrl(tmp), null, "should return null with no origin");
+  } finally { rmrf(tmp); }
+});
+
+test("detectGitRemoteUrl: returns null when .git is a file (worktree)", () => {
+  const tmp = makeTmpDir();
+  try {
+    // In a git worktree, .git is a file pointing to the real .git dir.
+    fs.writeFileSync(path.join(tmp, ".git"), "gitdir: /some/real/path/.git\n");
+    assertEqual(kb.detectGitRemoteUrl(tmp), null, "worktree .git file should return null");
+  } finally { rmrf(tmp); }
+});
+
+test("detectGitRemoteUrl: handles SSH remote URLs", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp, ".git"));
+    const gitConfig = '[remote "origin"]\n\turl = git@github.com:org/repo.git\n';
+    fs.writeFileSync(path.join(tmp, ".git", "config"), gitConfig);
+    assertEqual(kb.detectGitRemoteUrl(tmp), "git@github.com:org/repo.git", "wrong SSH remote URL");
+  } finally { rmrf(tmp); }
+});
+
+// ── computeProjectId ─────────────────────────────────────────────────
+
+test("computeProjectId: is deterministic for same cwd (no git)", () => {
+  const tmp = makeTmpDir();
+  try {
+    const id1 = kb.computeProjectId(tmp);
+    const id2 = kb.computeProjectId(tmp);
+    assertEqual(id1, id2, "computeProjectId should be deterministic");
+  } finally { rmrf(tmp); }
+});
+
+test("computeProjectId: returns 10-char lowercase hex string", () => {
+  const tmp = makeTmpDir();
+  try {
+    const id = kb.computeProjectId(tmp);
+    assertEqual(id.length, 10, "id should be 10 chars");
+    assert(/^[0-9a-f]+$/.test(id), "id should be lowercase hex");
+  } finally { rmrf(tmp); }
+});
+
+test("computeProjectId: different repos get different ids", () => {
+  const tmp1 = makeTmpDir();
+  const tmp2 = makeTmpDir();
+  try {
+    const id1 = kb.computeProjectId(tmp1);
+    const id2 = kb.computeProjectId(tmp2);
+    assert(id1 !== id2, "different repos should get different ids");
+  } finally { rmrf(tmp1); rmrf(tmp2); }
+});
+
+test("computeProjectId: two worktrees with same remote get same id", () => {
+  const remoteConfig = '[remote "origin"]\n\turl = https://github.com/org/shared-repo.git\n';
+  const tmp1 = makeTmpDir();
+  const tmp2 = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp1, ".git"));
+    fs.writeFileSync(path.join(tmp1, ".git", "config"), remoteConfig);
+    fs.mkdirSync(path.join(tmp2, ".git"));
+    fs.writeFileSync(path.join(tmp2, ".git", "config"), remoteConfig);
+    assertEqual(kb.computeProjectId(tmp1), kb.computeProjectId(tmp2), "same remote → same id");
+  } finally { rmrf(tmp1); rmrf(tmp2); }
+});
+
+// ── getProjectSlug ───────────────────────────────────────────────────
+
+test("getProjectSlug: returns slugified basename of cwd", () => {
+  const tmp = makeTmpDir();
+  try {
+    const expected = kb.slugify(path.basename(tmp));
+    assertEqual(kb.getProjectSlug(tmp), expected, "slug should equal slugified basename");
+  } finally { rmrf(tmp); }
+});
+
+// ── getGlobalProjectDir ──────────────────────────────────────────────
+
+test("getGlobalProjectDir: path is under <root>/projects/", () => {
+  const tmp = makeTmpDir();
+  try {
+    const dir = kb.getGlobalProjectDir("/my/root", tmp);
+    assert(dir.startsWith("/my/root/projects/"), "should be under root/projects");
+  } finally { rmrf(tmp); }
+});
+
+test("getGlobalProjectDir: ends with computed project id", () => {
+  const tmp = makeTmpDir();
+  try {
+    const id = kb.computeProjectId(tmp);
+    const dir = kb.getGlobalProjectDir("/root", tmp);
+    assert(dir.endsWith(`-${id}`), `dir should end with -${id}`);
+  } finally { rmrf(tmp); }
+});
+
+// ── hasLocalWhytcard ─────────────────────────────────────────────────
+
+test("hasLocalWhytcard: returns false when .whytcard does not exist", () => {
+  const tmp = makeTmpDir();
+  try {
+    assert(!kb.hasLocalWhytcard(tmp), "should return false with no .whytcard");
+  } finally { rmrf(tmp); }
+});
+
+test("hasLocalWhytcard: returns true when .whytcard directory exists", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp, ".whytcard"));
+    assert(kb.hasLocalWhytcard(tmp), "should return true when .whytcard dir exists");
+  } finally { rmrf(tmp); }
+});
+
+test("hasLocalWhytcard: returns true for dangling symlink to .whytcard", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.symlinkSync("/nonexistent/target/.whytcard", path.join(tmp, ".whytcard"));
+    assert(kb.hasLocalWhytcard(tmp), "dangling symlink should still return true");
+  } finally { rmrf(tmp); }
+});
+
+// ── loadGlobalKbConfig ───────────────────────────────────────────────
+
+test("loadGlobalKbConfig: returns null when no config.json", () => {
+  const tmp = makeTmpDir();
+  try {
+    assertEqual(kb.loadGlobalKbConfig(tmp), null, "should return null with no config");
+  } finally { rmrf(tmp); }
+});
+
+test("loadGlobalKbConfig: returns parsed JSON when config.json exists", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.writeFileSync(path.join(tmp, "config.json"), JSON.stringify({ mode: "global" }));
+    const cfg = kb.loadGlobalKbConfig(tmp);
+    assert(cfg !== null, "should return config object");
+    assertEqual(cfg.mode, "global", "wrong mode value");
+  } finally { rmrf(tmp); }
+});
+
+test("loadGlobalKbConfig: returns null for invalid JSON", () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.writeFileSync(path.join(tmp, "config.json"), "not valid json {{{");
+    assertEqual(kb.loadGlobalKbConfig(tmp), null, "should return null for invalid JSON");
+  } finally { rmrf(tmp); }
+});
+
+// ── Summary ──────────────────────────────────────────────────────────
 
 console.log(`\n${"═".repeat(60)}`);
 console.log(`${passed + failed} tests: ${passed} passed, ${failed} failed`);
