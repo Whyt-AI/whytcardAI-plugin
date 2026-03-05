@@ -142,9 +142,22 @@ function buildOnboardingContext(cwdPath) {
   // If the project already has a .whytcard folder (local or symlink), don't nag.
   if (hasLocalWhytcard(cwdPath)) return "";
 
-  const globalRoot = getDefaultGlobalRoot();
-  const globalCfgPath = getGlobalConfigPath(globalRoot);
-  const globalCfg = loadGlobalKbConfig(globalRoot);
+  // Start from the default global root as a bootstrap location.
+  const bootstrapRoot = getDefaultGlobalRoot();
+  let globalRoot = bootstrapRoot;
+  let globalCfgPath = getGlobalConfigPath(globalRoot);
+  let globalCfg = loadGlobalKbConfig(globalRoot);
+
+  // If the bootstrap config declares a different globalRoot, respect it.
+  if (
+    globalCfg &&
+    typeof globalCfg.globalRoot === "string" &&
+    globalCfg.globalRoot.trim()
+  ) {
+    globalRoot = globalCfg.globalRoot;
+    globalCfgPath = getGlobalConfigPath(globalRoot);
+    globalCfg = loadGlobalKbConfig(globalRoot);
+  }
   const globalProjectDir = getGlobalProjectDir(globalRoot, cwdPath);
 
   // Keep this short: it's injected in every SessionStart.
