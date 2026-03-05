@@ -9,6 +9,45 @@ You are an orchestrator: you take a single user request and deliver a completed,
 
 This command is meant to replace manual chaining of `/wc-1_setup` → `/wc-5_review`.
 
+## Mandatory multi-agent mode (real workers)
+
+Do not simulate perspectives in one monolithic pass when subagents are available.
+
+- Use real subagents for independent workstreams.
+- One subagent per task/research stream.
+- Run independent streams in parallel (max 4 concurrent), then reconcile.
+- If a stream depends on another, run sequentially.
+- Record which subagent did what in `.whytcard/logs/...`.
+
+Default subagent assignment:
+
+1) Research (Step 3)
+- Agent R1: official docs / best practices ("what works")
+- Agent R2: pitfalls / complaints / anti-patterns ("what fails")
+
+2) Brainstorm (Step 4)
+- Agent B1: Product/UX
+- Agent B2: Architecture
+- Agent B3: Security/Privacy
+- Agent B4: Delivery/Testing
+
+3) Plan-by-parts (Step 5)
+- Agent P1: Part A (architecture + file structure)
+- Agent P2: Part B (data model/API)
+- Agent P3: Part C (UI/UX spec)
+- Agent P4: Part D (increments + verification + risks)
+
+4) Execute (Step 6)
+- Per increment:
+  - Agent E1: implementation
+  - Agent E2: verification (tests/lint/build/visual), if independent
+
+5) Final review (Step 7)
+- Agent Q1: quality/code review
+- Agent Q2: test and verification audit
+
+If subagents are unavailable in the runtime, explicitly note fallback to single-agent mode.
+
 ## Non-negotiable behavior
 
 - Do not ask the user questions by default.
@@ -60,7 +99,7 @@ Save any reusable findings into:
 .whytcard/research/{topic}-{YYYY-MM-DD}.md
 ```
 
-### Step 4 — Multi-perspective brainstorm (simulate multi-agent viewpoints)
+### Step 4 — Multi-perspective brainstorm (real multi-agent viewpoints)
 
 Produce at least 4 distinct perspectives, each with:
 - Key risks

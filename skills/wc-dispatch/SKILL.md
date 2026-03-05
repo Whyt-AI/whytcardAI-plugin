@@ -27,6 +27,20 @@ If the session-start hook detected specific technologies, also invoke:
 - **svelte** → Look up Svelte/SvelteKit docs
 - **astro** → Look up Astro docs
 
+## Multi-agent dispatch override
+
+If user intent includes:
+- "multi-agent", "orchestrate agents", "1 agent par tache", "parallel research", "delegue"
+
+Then force dispatch to:
+- `wc-Whytcard_orchestrator` in mandatory multi-agent mode
+
+Execution policy for this override:
+- Split request into independent streams.
+- Assign one subagent per stream.
+- Run independent streams in parallel (max 4).
+- Reconcile results into a single plan/execution trail in `.whytcard/`.
+
 ## Critical rules
 
 - **Never invoke a skill that is not installed.** If you're unsure whether a skill exists, check first or use the fallback.

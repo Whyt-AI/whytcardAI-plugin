@@ -72,6 +72,7 @@ const ALL_SKILLS = [...CORE_SKILLS, ...ADVANCED_SKILLS, ...LEGACY_SKILLS];
 const HOOK_FILES = [
   "constitution.md",
   "hooks/lib/output.js",
+  "hooks/lib/whytcard-kb.js",
   "hooks/wc-session-start.js",
   "hooks/wc-prompt-dispatch.js",
   "hooks/wc-pre-edit-gate.js",
