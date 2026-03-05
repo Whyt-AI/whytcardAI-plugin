@@ -91,3 +91,12 @@ If `.whytcard/` is missing, onboard automatically:
 3. Version-check before dependency changes.
 4. Visual-verify after UI changes.
 5. Declare done only after evidence.
+
+## Cursor Cloud specific instructions
+
+This is a zero-dependency Node.js plugin (no `package.json`, no npm install). Only Node.js (v22+) is required.
+
+- **Tests:** `node tests/test-hooks.js` — runs 32 assertions using only Node.js built-ins.
+- **Setup:** `bash setup.sh` — symlinks `.cursor/hooks.json` and `.claude/settings.json` to `~/.cursor/` and `~/.claude/`.
+- **Hook demo:** `WHYTCARD_DISABLE_AUTO_SETUP=1 node hooks/session-init.js` outputs JSON context injection. Set `WHYTCARD_DISABLE_AUTO_SETUP=1` to prevent filesystem side-effects when testing hooks in isolation.
+- No lint tool, no build step, no external services. The test suite is the single quality gate.
