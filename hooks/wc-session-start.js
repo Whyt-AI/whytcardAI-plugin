@@ -12,13 +12,31 @@
 const fs = require("fs");
 const path = require("path");
 const { injectContext, loadConfig, getPluginRoot } = require("./lib/output");
+
+// Optional knowledge base helpers; fall back gracefully if not available
+let kbApi;
+try {
+  kbApi = require("./lib/whytcard-kb");
+} catch (err) {
+  process.stderr.write(
+    "wc-session-start: optional module ./lib/whytcard-kb not found; falling back to defaults.\n"
+  );
+  kbApi = {
+    getDefaultGlobalRoot: () => null,
+    getGlobalConfigPath: () => null,
+    loadGlobalKbConfig: () => ({}),
+    getGlobalProjectDir: () => null,
+    hasLocalWhytcard: () => false,
+  };
+}
+
 const {
   getDefaultGlobalRoot,
   getGlobalConfigPath,
   loadGlobalKbConfig,
   getGlobalProjectDir,
   hasLocalWhytcard,
-} = require("./lib/whytcard-kb");
+} = kbApi;
 
 // ─── Load constitution ──────────────────────────────────────────────────
 
