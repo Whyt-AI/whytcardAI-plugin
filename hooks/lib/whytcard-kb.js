@@ -83,7 +83,20 @@ function getGlobalProjectDir(globalRoot, cwd) {
 }
 
 function hasLocalWhytcard(cwd) {
-  return fs.existsSync(path.join(cwd, ".whytcard"));
+  const whytcardPath = path.join(cwd, ".whytcard");
+  try {
+    // lstatSync returns info about the path itself, and succeeds even for
+    // dangling symlinks. This lets us distinguish "no .whytcard at all"
+    // from "a .whytcard symlink whose target is missing".
+    fs.lstatSync(whytcardPath);
+    return true;
+  } catch (err) {
+    if (err && (err.code === "ENOENT" || err.code === "ENOTDIR")) {
+      return false;
+    }
+    // For any unexpected error, fail closed and report "no local whytcard".
+    return false;
+  }
 }
 
 module.exports = {
