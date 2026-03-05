@@ -104,6 +104,7 @@ module.exports = {
   getGlobalConfigPath,
   loadGlobalKbConfig,
   detectGitRemoteUrl,
+  slugify,
   computeProjectId,
   getProjectSlug,
   getGlobalProjectDir,

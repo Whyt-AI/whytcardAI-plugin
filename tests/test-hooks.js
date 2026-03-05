@@ -538,6 +538,303 @@ for (const file of requiredFiles) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// SECTION 10: hooks/lib/whytcard-kb.js
+// ═══════════════════════════════════════════════════════════════════════
+
+console.log("\n hooks/lib/whytcard-kb.js — KB helpers");
+
+const kb = require("../hooks/lib/whytcard-kb");
+const os = require("os");
+const crypto = require("crypto");
+
+// ── slugify ──────────────────────────────────────────────────────────
+
+test("slugify: empty string → 'project'", () => {
+  assertEqual(kb.slugify(""), "project", "empty string should fall back to 'project'");
+});
+
+test("slugify: null/undefined → 'project'", () => {
+  assertEqual(kb.slugify(null), "project", "null should fall back to 'project'");
+  assertEqual(kb.slugify(undefined), "project", "undefined should fall back to 'project'");
+});
+
+test("slugify: lowercase conversion", () => {
+  assertEqual(kb.slugify("MyProject"), "myproject", "should lowercase");
+});
+
+test("slugify: spaces and special chars → hyphens", () => {
+  assertEqual(kb.slugify("My Awesome Project!"), "my-awesome-project", "spaces/specials → hyphens");
+});
+
+test("slugify: leading/trailing hyphens stripped", () => {
+  const result = kb.slugify("---hello---");
+  assert(!result.startsWith("-"), "should not start with hyphen");
+  assert(!result.endsWith("-"), "should not end with hyphen");
+  assertEqual(result, "hello", "should strip leading/trailing hyphens");
+});
+
+test("slugify: consecutive specials collapse to single hyphen", () => {
+  assertEqual(kb.slugify("hello...world"), "hello-world", "consecutive specials → single hyphen");
+});
+
+test("slugify: long input truncated to 60 chars", () => {
+  const long = "a".repeat(80);
+  const result = kb.slugify(long);
+  assert(result.length <= 60, "result should be ≤60 chars");
+  assert(!result.endsWith("-"), "truncated result should not end with a hyphen");
+});
+
+test("slugify: preserves numbers", () => {
+  assertEqual(kb.slugify("project42"), "project42", "numbers should be preserved");
+});
+
+test("slugify: all-special-chars string → 'project'", () => {
+  assertEqual(kb.slugify("!!!---!!!"), "project", "all specials should fall back to 'project'");
+});
+
+// ── getDefaultGlobalRoot / getGlobalConfigPath ───────────────────────
+
+test("getDefaultGlobalRoot returns path under homedir", () => {
+  const root = kb.getDefaultGlobalRoot();
+  assert(root.startsWith(os.homedir()), "global root should be under homedir");
+  assert(root.endsWith(".whytcard"), "global root should end with .whytcard");
+});
+
+test("getGlobalConfigPath: default root used when no arg", () => {
+  const cfgPath = kb.getGlobalConfigPath();
+  assert(cfgPath.startsWith(os.homedir()), "config path should be under homedir");
+  assert(cfgPath.endsWith("config.json"), "config path should end with config.json");
+});
+
+test("getGlobalConfigPath: respects custom root", () => {
+  const cfgPath = kb.getGlobalConfigPath("/custom/root");
+  assertEqual(cfgPath, path.join("/custom/root", "config.json"), "should use custom root");
+});
+
+// ── loadGlobalKbConfig ───────────────────────────────────────────────
+
+test("loadGlobalKbConfig: returns null when config file absent", () => {
+  const result = kb.loadGlobalKbConfig("/nonexistent/path/that/does/not/exist");
+  assert(result === null, "should return null when config file missing");
+});
+
+test("loadGlobalKbConfig: returns parsed config when file exists", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const cfg = { mode: "global", projectsRoot: "/tmp/projects" };
+    fs.writeFileSync(path.join(tmpDir, "config.json"), JSON.stringify(cfg), "utf8");
+    const result = kb.loadGlobalKbConfig(tmpDir);
+    assert(result !== null, "should return config object");
+    assertEqual(result.mode, "global", "should parse mode");
+    assertEqual(result.projectsRoot, "/tmp/projects", "should parse projectsRoot");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("loadGlobalKbConfig: returns null on malformed JSON", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    fs.writeFileSync(path.join(tmpDir, "config.json"), "{ not valid json", "utf8");
+    const result = kb.loadGlobalKbConfig(tmpDir);
+    assert(result === null, "malformed JSON should return null");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// ── detectGitRemoteUrl ───────────────────────────────────────────────
+
+test("detectGitRemoteUrl: returns null when no .git/config", () => {
+  const result = kb.detectGitRemoteUrl("/nonexistent/path/that/does/not/exist");
+  assert(result === null, "should return null when .git/config missing");
+});
+
+test("detectGitRemoteUrl: returns null when .git is a file (worktree)", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    // In a git worktree, .git is a file (not a directory), so .git/config won't exist
+    fs.writeFileSync(path.join(tmpDir, ".git"), "gitdir: ../.git/worktrees/my-worktree\n", "utf8");
+    const result = kb.detectGitRemoteUrl(tmpDir);
+    assert(result === null, "worktree .git file should return null (no .git/config)");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectGitRemoteUrl: parses origin URL from standard .git/config", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const gitDir = path.join(tmpDir, ".git");
+    fs.mkdirSync(gitDir);
+    const gitConfig = `[core]\n\trepositoryformatversion = 0\n[remote "origin"]\n\turl = https://github.com/example/repo.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n`;
+    fs.writeFileSync(path.join(gitDir, "config"), gitConfig, "utf8");
+    const result = kb.detectGitRemoteUrl(tmpDir);
+    assertEqual(result, "https://github.com/example/repo.git", "should parse origin URL");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectGitRemoteUrl: parses SSH remote URL", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const gitDir = path.join(tmpDir, ".git");
+    fs.mkdirSync(gitDir);
+    const gitConfig = `[remote "origin"]\n\turl = git@github.com:example/repo.git\n`;
+    fs.writeFileSync(path.join(gitDir, "config"), gitConfig, "utf8");
+    const result = kb.detectGitRemoteUrl(tmpDir);
+    assertEqual(result, "git@github.com:example/repo.git", "should parse SSH URL");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectGitRemoteUrl: returns null when no remote origin in .git/config", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const gitDir = path.join(tmpDir, ".git");
+    fs.mkdirSync(gitDir);
+    fs.writeFileSync(path.join(gitDir, "config"), "[core]\n\trepositoryformatversion = 0\n", "utf8");
+    const result = kb.detectGitRemoteUrl(tmpDir);
+    assert(result === null, "no origin remote should return null");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectGitRemoteUrl: uses first url when multiple remotes present", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const gitDir = path.join(tmpDir, ".git");
+    fs.mkdirSync(gitDir);
+    const gitConfig = `[remote "upstream"]\n\turl = https://github.com/upstream/repo.git\n[remote "origin"]\n\turl = https://github.com/fork/repo.git\n`;
+    fs.writeFileSync(path.join(gitDir, "config"), gitConfig, "utf8");
+    const result = kb.detectGitRemoteUrl(tmpDir);
+    assertEqual(result, "https://github.com/fork/repo.git", "should prefer origin over other remotes");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// ── computeProjectId ─────────────────────────────────────────────────
+
+test("computeProjectId: returns 10-char hex string", () => {
+  const id = kb.computeProjectId("/some/project/path");
+  assert(typeof id === "string", "should return string");
+  assertEqual(id.length, 10, "should be 10 chars");
+  assert(/^[0-9a-f]+$/.test(id), "should be lowercase hex");
+});
+
+test("computeProjectId: same input produces same id", () => {
+  const id1 = kb.computeProjectId("/some/project/path");
+  const id2 = kb.computeProjectId("/some/project/path");
+  assertEqual(id1, id2, "same input should produce same id");
+});
+
+test("computeProjectId: different paths produce different ids", () => {
+  const id1 = kb.computeProjectId("/project/a");
+  const id2 = kb.computeProjectId("/project/b");
+  assert(id1 !== id2, "different paths should produce different ids");
+});
+
+test("computeProjectId: uses git remote URL when available", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const gitDir = path.join(tmpDir, ".git");
+    fs.mkdirSync(gitDir);
+    fs.writeFileSync(path.join(gitDir, "config"), `[remote "origin"]\n\turl = https://github.com/example/repo.git\n`, "utf8");
+    const idFromRemote = kb.computeProjectId(tmpDir);
+    const expectedId = crypto.createHash("sha1").update("https://github.com/example/repo.git").digest("hex").slice(0, 10);
+    assertEqual(idFromRemote, expectedId, "should hash the remote URL");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// ── getProjectSlug ───────────────────────────────────────────────────
+
+test("getProjectSlug: returns slugified basename of cwd", () => {
+  const slug = kb.getProjectSlug("/home/user/My Awesome Project");
+  assertEqual(slug, "my-awesome-project", "should slugify the directory name");
+});
+
+test("getProjectSlug: handles standard path without trailing slash", () => {
+  const slug = kb.getProjectSlug("/home/user/my-project");
+  assertEqual(slug, "my-project", "should handle standard path");
+});
+
+// ── getGlobalProjectDir ──────────────────────────────────────────────
+
+test("getGlobalProjectDir: returns path under globalRoot/projects", () => {
+  const dir = kb.getGlobalProjectDir("/custom/root", "/home/user/my-project");
+  assert(dir.startsWith("/custom/root/projects/"), "should be under globalRoot/projects");
+  assert(dir.includes("my-project-"), "should include slug");
+});
+
+test("getGlobalProjectDir: uses default root when no globalRoot given", () => {
+  const dir = kb.getGlobalProjectDir(null, "/home/user/my-project");
+  assert(dir.startsWith(os.homedir()), "should use homedir as default root");
+  assert(dir.includes("projects"), "should include projects subdir");
+});
+
+test("getGlobalProjectDir: slug and id are both in the dir name", () => {
+  const cwd = "/home/user/my-project";
+  const dir = kb.getGlobalProjectDir("/root", cwd);
+  const dirname = path.basename(dir);
+  assert(dirname.includes("-"), "dir name should have slug-id format");
+  const parts = dirname.split("-");
+  assert(parts.length >= 2, "dir name should have at least two parts");
+});
+
+// ── hasLocalWhytcard ─────────────────────────────────────────────────
+
+test("hasLocalWhytcard: returns false when no .whytcard in dir", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    assert(!kb.hasLocalWhytcard(tmpDir), "should return false when .whytcard absent");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("hasLocalWhytcard: returns true when .whytcard directory exists", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    fs.mkdirSync(path.join(tmpDir, ".whytcard"));
+    assert(kb.hasLocalWhytcard(tmpDir), "should return true when .whytcard dir exists");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("hasLocalWhytcard: returns true when .whytcard is a symlink to existing target", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    const target = path.join(tmpDir, "actual-whytcard");
+    fs.mkdirSync(target);
+    fs.symlinkSync(target, path.join(tmpDir, ".whytcard"));
+    assert(kb.hasLocalWhytcard(tmpDir), "should return true for symlink to existing dir");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("hasLocalWhytcard: returns true when .whytcard is a dangling symlink", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wc-kb-test-"));
+  try {
+    fs.symlinkSync("/nonexistent/target", path.join(tmpDir, ".whytcard"));
+    assert(kb.hasLocalWhytcard(tmpDir), "should return true for dangling symlink");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("hasLocalWhytcard: returns false for nonexistent directory", () => {
+  assert(!kb.hasLocalWhytcard("/nonexistent/path/that/does/not/exist"), "should return false for nonexistent cwd");
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // Summary
 // ═══════════════════════════════════════════════════════════════════════
 
